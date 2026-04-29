@@ -1,3 +1,20 @@
 spring:
   application:
     name: payment-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/${DB_NAME:tripmate_postgres}
+    username: ${DB_USER:tripmate}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+server:
+  port: 0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+  instance:
+    instance-id:
+      ${spring.cloud.client.hostname}:${spring.application.instance_id:${random.value}}
