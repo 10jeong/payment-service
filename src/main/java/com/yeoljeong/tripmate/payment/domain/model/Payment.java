@@ -42,14 +42,8 @@ public class Payment {
     @Embedded
     private PaymentTimestamps paymentTimestamps;
 
-    public Payment(
-             UUID userId,
-             UUID orderId,
-             PaymentStatus paymentStatus,
-             String paymentMethod,
-             TossPayment tossPayment,
-             PaymentAmount paymentAmount,
-             PaymentTimestamps paymentTimestamps
+    public Payment(UUID userId, UUID orderId, PaymentStatus paymentStatus, String paymentMethod,
+             TossPayment tossPayment, PaymentAmount paymentAmount, PaymentTimestamps paymentTimestamps
      ) {
         this.userId = Objects.requireNonNull(userId, "userId");
         this.orderId = Objects.requireNonNull(orderId, "orderId");
