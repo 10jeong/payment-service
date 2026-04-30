@@ -36,11 +36,17 @@ public class Payment {
     @Embedded
     private PaymentAmount paymentAmount;
 
+    @Column(name = "failure_code", length = 100)
+    private String failureCode;
+
     @Column(name = "failure_reason", length = 255)
     private String failureReason;
 
     @Embedded
     private PaymentTimestamps paymentTimestamps;
+
+    @Column(name = "receipt_url", length = 500)
+    private String receiptUrl;
 
     public Payment(UUID userId, UUID orderId, PaymentStatus paymentStatus, String paymentMethod,
              TossPayment tossPayment, PaymentAmount paymentAmount, PaymentTimestamps paymentTimestamps
