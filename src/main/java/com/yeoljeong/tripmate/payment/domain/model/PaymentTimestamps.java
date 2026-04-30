@@ -14,9 +14,6 @@ public class PaymentTimestamps {
     @Column(name = "approved_at")
     private Instant approvedAt;
 
-    @Column(name = "cancelled_at")
-    private Instant cancelledAt;
-
-    @Column(name = "refunded_at")
-    private Instant refundedAt;
+    @Column(name = "canceled_at")
+    private Instant canceledAt;
 }

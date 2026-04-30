@@ -14,6 +14,6 @@ public class PaymentAmount {
     @Column(name = "approved_amount", precision = 10, scale = 2)
     private BigDecimal approvedAmount;
 
-    @Column(name = "refunded_amount", precision = 10, scale = 2)
-    private BigDecimal refundedAmount;
+    @Column(name = "canceled_amount", precision = 10, scale = 2)
+    private BigDecimal canceledAmount;
 }
