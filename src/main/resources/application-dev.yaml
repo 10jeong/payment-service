@@ -5,4 +5,5 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        default_schema: payment
     show-sql: true
