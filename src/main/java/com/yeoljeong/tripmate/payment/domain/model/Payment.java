@@ -9,7 +9,17 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Entity
-@Table(name = "p_payment")
+@Table(
+        name = "p_payment",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_payment_toss_order_id", columnNames = "toss_order_id"),
+                @UniqueConstraint(name = "uk_payment_payment_key", columnNames = "payment_key")
+        },
+        indexes = {
+                @Index(name = "idx_payment_order_id", columnList = "order_id"),
+                @Index(name = "idx_payment_user_id", columnList = "user_id")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
     @Id
