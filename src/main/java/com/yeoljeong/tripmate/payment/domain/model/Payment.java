@@ -1,7 +1,5 @@
 package com.yeoljeong.tripmate.payment.domain.model;
 
-import com.yeoljeong.tripmate.event.enums.OrderTopic;
-import com.yeoljeong.tripmate.event.enums.UserTopic;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
