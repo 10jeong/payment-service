@@ -62,6 +62,10 @@ public class PaymentCommandService {
                     payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
         }
 
+        if (paymentRepository.existsByOrderIdAndStatus(payment.getOrderId(), PaymentStatus.DONE)) {
+            throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
+        }
+
         payment.getPaymentAmount().validateAmount(request.amount());
 
         try {
