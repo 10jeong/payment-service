@@ -22,9 +22,7 @@ public class OrderAdapter implements OrderClient {
         try {
             OrderPaymentResponse orderPaymentResponse = orderFeignClient.getOrderPayment(orderId);
 
-            if (orderPaymentResponse == null) {
-                throw new BusinessException(PaymentErrorCode.ORDER_PAYMENT_NOT_FOUND);
-            }
+            validateOrderPaymentResponse(orderPaymentResponse);
 
             return new PayableCommand(orderPaymentResponse.orderId(), orderPaymentResponse.userId(), orderPaymentResponse.orderName(),
                     orderPaymentResponse.amount(), orderPaymentResponse.orderStatus());
@@ -33,6 +31,20 @@ public class OrderAdapter implements OrderClient {
 
         } catch (FeignException e) {
             throw new BusinessException(PaymentErrorCode.ORDER_SERVICE_ERROR);
+        }
+    }
+
+    private void validateOrderPaymentResponse(OrderPaymentResponse response) {
+        if (response == null) {
+            throw new BusinessException(PaymentErrorCode.ORDER_PAYMENT_NOT_FOUND);
+        }
+
+        if (response.orderId() == null
+                || response.userId() == null
+                || response.orderName() == null
+                || response.amount() == null
+                || response.orderStatus() == null) {
+            throw new BusinessException(PaymentErrorCode.INVALID_ORDER_PAYMENT_RESPONSE);
         }
     }
 }
