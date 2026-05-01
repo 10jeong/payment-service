@@ -71,7 +71,7 @@ public class PaymentCommandService {
                     tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
         } catch (BusinessException e) {
             paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
-            throw new BusinessException(PaymentErrorCode.PAYMENT_CONFIRM_FAILED);
+            throw e;
         }
 
         paymentRepository.save(payment);
