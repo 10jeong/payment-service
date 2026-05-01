@@ -23,14 +23,14 @@ public class TossPaymentAdapter implements TossPaymentClient {
             TossConfirmResponse tossConfirmResponse = tossPaymentFeignClient.confirm(TossConfirmRequest.of(paymentKey, orderId,amount));
 
             if (tossConfirmResponse == null) {
-                throw new BusinessException(PaymentErrorCode.NOT_FOUND_TOSS_RESPONSE);
+                throw new BusinessException(PaymentErrorCode.TOSS_RESPONSE_NOT_FOUND);
             }
 
             return new TossConfirmCommand(tossConfirmResponse.paymentKey(), tossConfirmResponse.orderId(), tossConfirmResponse.status(),
                     tossConfirmResponse.method(), tossConfirmResponse.totalAmount(), tossConfirmResponse.approvedAt(), tossConfirmResponse.receiptUrl());
 
         } catch (FeignException.NotFound e) {
-            throw new BusinessException(PaymentErrorCode.NOT_FOUND_TOSS_RESPONSE);
+            throw new BusinessException(PaymentErrorCode.TOSS_RESPONSE_NOT_FOUND);
 
         } catch (FeignException e) {
             throw new BusinessException(PaymentErrorCode.TOSS_PAYMENT_ERROR);
