@@ -80,8 +80,7 @@ public class PaymentCommandService {
     }
 
     private String generateTossOrderId(UUID orderId) {
-        String shortOrderId = orderId.toString().replace("-", "").substring(0, 16);
-        return "ORD-" + shortOrderId + "-" + System.currentTimeMillis();
+        return "ORD-" + orderId.toString().replace("-", "");
     }
 
     private void validateOrderOwner(UUID userId, PayableCommand order) {
