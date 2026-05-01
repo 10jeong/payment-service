@@ -2,21 +2,15 @@ package com.yeoljeong.tripmate.payment.infrastructure.config;
 
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import feign.RequestInterceptor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-@Configuration
-@RequiredArgsConstructor
 public class TossPaymentFeignConfig {
 
-    private final TossPaymentProperties tossPaymentProperties;
-
     @Bean
-    public RequestInterceptor tossPaymentRequestInterceptor() {
+    public RequestInterceptor tossPaymentRequestInterceptor(TossPaymentProperties tossPaymentProperties) {
         return template -> {
             String secretKey = tossPaymentProperties.secretKey() + ":";
             String encodedSecretKey = Base64.getEncoder()
