@@ -116,9 +116,7 @@ public class Payment {
 
     // 결제 실패
     public void fail(String failureCode, String failureReason) {
-        if (this.paymentStatus == PaymentStatus.DONE) {
-            throw new BusinessException(PaymentErrorCode.FAILURE_NOT_AVAILABLE);
-        }
+        validateReady();
 
         this.failureCode = failureCode;
         this.failureReason = failureReason;
@@ -148,7 +146,7 @@ public class Payment {
 
     private void validateReady() {
         if (this.paymentStatus != PaymentStatus.READY) {
-            throw new BusinessException(PaymentErrorCode.APPROVAL_NOT_AVAILABLE);
+            throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
         }
     }
 
