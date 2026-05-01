@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "tossPaymentFeignClient", url = "${payment.toss.base-url}", configuration = TossPaymentFeignConfig.class)
+@FeignClient(name = "tossPaymentFeignClient", url = "${toss.payments.base-url}", configuration = TossPaymentFeignConfig.class)
 public interface TossPaymentFeignClient {
 
     @PostMapping("/v1/payments/confirm")
