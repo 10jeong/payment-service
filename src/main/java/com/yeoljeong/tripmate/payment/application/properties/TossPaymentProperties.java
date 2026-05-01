@@ -1,11 +1,14 @@
 package com.yeoljeong.tripmate.payment.application.properties;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @ConfigurationProperties(prefix = "toss.payments")
 public record TossPaymentProperties(
-        String baseUrl,
-        String secretKey,
-        String successUrl,
-        String failUrl
+        @NotBlank String baseUrl,
+        @NotBlank String secretKey,
+        @NotBlank String successUrl,
+        @NotBlank String failUrl
 ) { }
