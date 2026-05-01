@@ -6,6 +6,8 @@ import com.yeoljeong.tripmate.payment.infrastructure.persistence.jpa.PaymentJpaR
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class PaymentRepositoryImpl implements PaymentRepository {
@@ -15,6 +17,11 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     @Override
     public boolean existsByTossPayment_TossOrderId(String tossOrderId) {
         return paymentJpaRepository.existsByTossPayment_TossOrderId(tossOrderId);
+    }
+
+    @Override
+    public Optional<Payment> findByTossPayment_TossOrderId(String tossOrderId) {
+        return paymentJpaRepository.findByTossPayment_TossOrderId(tossOrderId);
     }
 
     @Override
