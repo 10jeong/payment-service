@@ -2,7 +2,6 @@ package com.yeoljeong.tripmate.payment.presentation.dto.response;
 
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
-import com.yeoljeong.tripmate.payment.domain.model.Payment;
 
 import java.math.BigDecimal;
 import java.time.Instant;
