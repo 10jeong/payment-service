@@ -28,6 +28,7 @@ public class PaymentCommandService {
     private final OrderClient orderClient;
     private final TossPaymentClient tossPaymentClient;
     private final TossPaymentProperties tossPaymentProperties;
+    private final PaymentFailureService paymentFailureService;
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
@@ -67,7 +68,7 @@ public class PaymentCommandService {
             payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
                     tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
         } catch (BusinessException e) {
-            payment.fail(e.getErrorCode().toString(), e.getMessage());
+            paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
             throw new BusinessException(PaymentErrorCode.PAYMENT_CONFIRM_FAILED);
         }
 
