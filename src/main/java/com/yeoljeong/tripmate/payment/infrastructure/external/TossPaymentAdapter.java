@@ -35,6 +35,10 @@ public class TossPaymentAdapter implements TossPaymentClient {
             throw new BusinessException(PaymentErrorCode.TOSS_RESPONSE_NOT_FOUND);
 
         } catch (FeignException e) {
+            if (e.status() >= 400 && e.status() < 500) {
+                throw new BusinessException(PaymentErrorCode.TOSS_PAYMENT_CLIENT_ERROR);
+            }
+
             throw new BusinessException(PaymentErrorCode.TOSS_PAYMENT_ERROR);
         }
     }
