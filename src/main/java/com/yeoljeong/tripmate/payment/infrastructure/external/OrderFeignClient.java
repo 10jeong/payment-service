@@ -11,5 +11,5 @@ import java.util.UUID;
 public interface OrderFeignClient {
 
     @GetMapping("/{orderId}/payment")
-    OrderPaymentResponse getOrderPaymentInfo(@PathVariable UUID orderId);
+    OrderPaymentResponse getOrderPayment(@PathVariable UUID orderId);
 }
