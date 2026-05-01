@@ -9,6 +9,7 @@ import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
+import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
@@ -35,6 +36,7 @@ public class PaymentCommandService {
 
         validateOrderOwner(userId, payableCommand);
         validatePayableOrder(payableCommand);
+        validatePaymentNotCompleted(payableCommand.orderId());
 
         String tossOrderId = generateTossOrderId(payableCommand.orderId());
 
@@ -81,7 +83,8 @@ public class PaymentCommandService {
     }
 
     private String generateTossOrderId(UUID orderId) {
-        return "ORD-" + orderId.toString().replace("-", "");
+        return "ORD-" + orderId.toString().replace("-", "")
+                + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
     }
 
     private void validateOrderOwner(UUID userId, PayableCommand order) {
@@ -93,6 +96,12 @@ public class PaymentCommandService {
     private void validatePayableOrder(PayableCommand order) {
         if (!"CREATED".equals(order.orderStatus())) {
             throw new BusinessException(PaymentErrorCode.ORDER_NOT_PAYABLE);
+        }
+    }
+
+    private void validatePaymentNotCompleted(UUID orderId) {
+        if (paymentRepository.existsByOrderIdAndStatus(orderId, PaymentStatus.DONE)) {
+            throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
         }
     }
 
