@@ -2,7 +2,11 @@ package com.yeoljeong.tripmate.payment.application.service.command;
 
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.application.client.OrderClient;
+import com.yeoljeong.tripmate.payment.application.client.TossPaymentClient;
+import com.yeoljeong.tripmate.payment.application.dto.command.ConfirmPaymentCommand;
 import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
+import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
+import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
@@ -21,11 +25,11 @@ public class PaymentCommandService {
 
     private final PaymentRepository paymentRepository;
     private final OrderClient orderClient;
+    private final TossPaymentClient tossPaymentClient;
 
     private static final String SUCCESS_URL = "http://localhost:8080/api/payments/success";
     private static final String FAIL_URL = "http://localhost:8080/api/payments/fail";
 
-    @Transactional
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
 
@@ -42,6 +46,39 @@ public class PaymentCommandService {
         return CreatePaymentResult.of(savedPayment, payableCommand.orderName(), SUCCESS_URL, FAIL_URL);
     }
 
+    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) {
+        Payment payment = paymentRepository.findByTossPayment_TossOrderId(request.tossOrderId())
+                .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+        validatePaymentOwner(userId, payment);
+
+        if (payment.isDone()) {
+            return ConfirmPaymentResult.of(payment.getUserId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
+                    payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
+                    payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
+                    payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
+        }
+
+        payment.getPaymentAmount().validateAmount(request.amount());
+
+        try {
+            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(request.paymentKey(), request.tossOrderId(), request.amount());
+
+            payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
+                    tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
+        } catch (BusinessException e) {
+            payment.fail(e.getErrorCode().toString(), e.getMessage());
+            throw new BusinessException(PaymentErrorCode.PAYMENT_CONFIRM_FAILED);
+        }
+
+        paymentRepository.save(payment);
+
+        return ConfirmPaymentResult.of(payment.getUserId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
+                payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
+                payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
+                payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
+    }
+
     private String generateTossOrderId(UUID orderId) {
         String shortOrderId = orderId.toString().replace("-", "").substring(0, 16);
         return "ORD-" + shortOrderId + "-" + System.currentTimeMillis();
@@ -56,6 +93,12 @@ public class PaymentCommandService {
     private void validatePayableOrder(PayableCommand order) {
         if (!"CREATED".equals(order.orderStatus())) {
             throw new BusinessException(PaymentErrorCode.ORDER_NOT_PAYABLE);
+        }
+    }
+
+    private void validatePaymentOwner(UUID userId, Payment payment) {
+        if (!userId.equals(payment.getUserId())) {
+            throw new BusinessException(PaymentErrorCode.PAYMENT_OWNER_MISMATCH);
         }
     }
 }
