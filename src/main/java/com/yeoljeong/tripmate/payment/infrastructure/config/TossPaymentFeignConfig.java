@@ -1,6 +1,6 @@
 package com.yeoljeong.tripmate.payment.infrastructure.config;
 
-import com.yeoljeong.tripmate.payment.infrastructure.properties.TossPaymentProperties;
+import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import feign.RequestInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

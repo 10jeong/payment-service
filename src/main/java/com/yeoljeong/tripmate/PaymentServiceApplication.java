@@ -1,6 +1,6 @@
 package com.yeoljeong.tripmate;
 
-import com.yeoljeong.tripmate.payment.infrastructure.properties.TossPaymentProperties;
+import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

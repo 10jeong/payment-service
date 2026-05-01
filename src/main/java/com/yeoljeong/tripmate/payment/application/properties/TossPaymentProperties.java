@@ -1,4 +1,4 @@
-package com.yeoljeong.tripmate.payment.infrastructure.properties;
+package com.yeoljeong.tripmate.payment.application.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

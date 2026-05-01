@@ -8,6 +8,7 @@ import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
 import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
+import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
@@ -26,9 +27,7 @@ public class PaymentCommandService {
     private final PaymentRepository paymentRepository;
     private final OrderClient orderClient;
     private final TossPaymentClient tossPaymentClient;
-
-    private static final String SUCCESS_URL = "http://localhost:8080/api/payments/success";
-    private static final String FAIL_URL = "http://localhost:8080/api/payments/fail";
+    private final TossPaymentProperties tossPaymentProperties;
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
@@ -43,7 +42,8 @@ public class PaymentCommandService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        return CreatePaymentResult.of(savedPayment, payableCommand.orderName(), SUCCESS_URL, FAIL_URL);
+        return CreatePaymentResult.of(savedPayment, payableCommand.orderName(),
+                tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
     }
 
     public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) {
