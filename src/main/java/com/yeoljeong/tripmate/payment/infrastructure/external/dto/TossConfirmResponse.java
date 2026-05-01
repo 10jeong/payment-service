@@ -10,5 +10,5 @@ public record TossConfirmResponse(
         String method,
         BigDecimal totalAmount,
         Instant approvedAt,
-        String receipt
+        String receiptUrl
 ) {}
