@@ -2,11 +2,13 @@ package com.yeoljeong.tripmate.payment.application.dto.result;
 
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+@Builder
 public record CreatePaymentResult(
         UUID paymentId,
         UUID orderId,
@@ -19,16 +21,16 @@ public record CreatePaymentResult(
         Instant requestedAt
 ) {
     public static CreatePaymentResult of(Payment payment, String orderName, String successUrl, String failUrl) {
-        return new CreatePaymentResult(
-                payment.getId(),
-                payment.getOrderId(),
-                payment.getTossPayment().getTossOrderId(),
-                payment.getPaymentStatus(),
-                payment.getPaymentAmount().getRequestedAmount(),
-                orderName,
-                successUrl,
-                failUrl,
-                payment.getPaymentTimestamps().getRequestedAt()
-        );
+        return CreatePaymentResult.builder()
+                .paymentId(payment.getId())
+                .orderId(payment.getOrderId())
+                .tossOrderId(payment.getTossPayment().getTossOrderId())
+                .paymentStatus(payment.getPaymentStatus())
+                .amount(payment.getPaymentAmount().getRequestedAmount())
+                .orderName(orderName)
+                .successUrl(successUrl)
+                .failUrl(failUrl)
+                .requestedAt(payment.getPaymentTimestamps().getRequestedAt())
+                .build();
     }
 }
