@@ -25,7 +25,9 @@ public enum PaymentErrorCode implements ErrorCode {
     INVALID_PAYMENT_METHOD(HttpStatus.BAD_REQUEST, "결제 수단이 유효하지 않습니다."),
     INVALID_RECEIPT_URL(HttpStatus.BAD_REQUEST, "결제 영수증 URL이 유효하지 않습니다."),
     ORDER_PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "주문 정보를 찾을 수 없습니다."),
-    ORDER_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "주문 서비스 호출 에러입니다.");
+    ORDER_SERVICE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "주문 서비스 호출 에러입니다."),
+    ORDER_OWNER_MISMATCH(HttpStatus.BAD_REQUEST, "주문자와 결제자가 일치하지 않습니다."),
+    ORDER_NOT_PAYABLE(HttpStatus.BAD_REQUEST, "결제 가능한 상태가 아닙니다.");
 
     private final HttpStatus status;
     private final String description;
