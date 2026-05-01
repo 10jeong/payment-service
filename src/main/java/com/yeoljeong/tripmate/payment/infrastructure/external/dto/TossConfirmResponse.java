@@ -10,5 +10,13 @@ public record TossConfirmResponse(
         String method,
         BigDecimal totalAmount,
         Instant approvedAt,
-        String receiptUrl
-) {}
+        Receipt receipt
+) {
+    public String receiptUrl() {
+        return receipt == null ? null : receipt.url();
+    }
+
+    public record Receipt(
+            String url
+    ) { }
+}
