@@ -1,5 +1,7 @@
 package com.yeoljeong.tripmate.payment.domain.model;
 
+import com.yeoljeong.tripmate.event.enums.OrderTopic;
+import com.yeoljeong.tripmate.event.enums.UserTopic;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
@@ -100,14 +102,16 @@ public class Payment {
     }
 
     // 결제 완료(토스 승인)
-    public void complete(String paymentKey, BigDecimal approvedAmount, String paymentMethod, Instant approvedAt) {
+    public void complete(String paymentKey, BigDecimal approvedAmount, String paymentMethod, Instant approvedAt, String receiptUrl) {
         validateReady();
+        validateCompleteFields(paymentMethod, receiptUrl);
 
         this.tossPayment.approve(paymentKey);
         this.paymentAmount.approve(approvedAmount);
         this.paymentMethod = paymentMethod;
         this.paymentTimestamps.approve(approvedAt);
         this.paymentStatus = PaymentStatus.DONE;
+        this.receiptUrl = receiptUrl;
     }
 
     // 결제 실패
@@ -145,6 +149,16 @@ public class Payment {
     private void validateReady() {
         if (this.paymentStatus != PaymentStatus.READY) {
             throw new BusinessException(PaymentErrorCode.APPROVAL_NOT_AVAILABLE);
+        }
+    }
+
+    private void validateCompleteFields(String paymentMethod, String receiptUrl) {
+        if (paymentMethod == null || paymentMethod.isBlank()) {
+            throw new BusinessException(PaymentErrorCode.INVALID_PAYMENT_METHOD);
+        }
+
+        if (receiptUrl == null || receiptUrl.isBlank()) {
+            throw new BusinessException(PaymentErrorCode.INVALID_RECEIPT_URL);
         }
     }
 }

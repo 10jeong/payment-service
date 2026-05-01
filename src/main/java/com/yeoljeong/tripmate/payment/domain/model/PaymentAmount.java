@@ -43,20 +43,20 @@ public class PaymentAmount {
     // 결제 취소 금액 저장
     public void cancel(BigDecimal canceledAmount) {
         if (canceledAmount == null || canceledAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException(PaymentErrorCode.INVALID_CANCELED_AMOUNT);
+            throw new BusinessException(PaymentErrorCode.INVALID_PAYMENT_CANCEL_AMOUNT);
         }
         this.canceledAmount = canceledAmount;
     }
 
     private void validatePositive(BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessException(PaymentErrorCode.INVALID_REQUESTED_AMOUNT);
+            throw new BusinessException(PaymentErrorCode.INVALID_PAYMENT_REQUEST_AMOUNT);
         }
     }
 
     public void validateAmount(BigDecimal amount) {
         if (amount == null || requestedAmount.compareTo(amount) != 0) {
-            throw new BusinessException(PaymentErrorCode.INVALID_APPROVED_AMOUNT);
+            throw new BusinessException(PaymentErrorCode.PAYMENT_AMOUNT_MISMATCH);
         }
     }
 
