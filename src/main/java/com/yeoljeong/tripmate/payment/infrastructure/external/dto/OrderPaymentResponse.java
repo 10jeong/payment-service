@@ -9,8 +9,4 @@ public record OrderPaymentResponse(
         String orderName,
         BigDecimal amount,
         String orderStatus
-) {
-    public boolean isPayable() {
-        return "CREATED".equals(orderStatus);
-    }
-}
+) { }
