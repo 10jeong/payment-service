@@ -8,9 +8,11 @@ import com.yeoljeong.tripmate.payment.infrastructure.external.dto.TossConfirmReq
 import com.yeoljeong.tripmate.payment.infrastructure.external.dto.TossConfirmResponse;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
+@Component
 @RequiredArgsConstructor
 public class TossPaymentAdapter implements TossPaymentClient {
 
