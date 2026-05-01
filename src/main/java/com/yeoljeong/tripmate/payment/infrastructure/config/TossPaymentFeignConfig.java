@@ -13,7 +13,7 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class TossPaymentFeignConfig {
 
-    private static TossPaymentProperties tossPaymentProperties;
+    private final TossPaymentProperties tossPaymentProperties;
 
     @Bean
     public RequestInterceptor tossPaymentRequestInterceptor() {
