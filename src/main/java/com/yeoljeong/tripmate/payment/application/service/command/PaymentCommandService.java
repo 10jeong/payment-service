@@ -8,7 +8,7 @@ import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
 import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
-import com.yeoljeong.tripmate.payment.application.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
