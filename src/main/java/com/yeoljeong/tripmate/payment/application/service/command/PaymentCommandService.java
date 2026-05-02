@@ -8,12 +8,14 @@ import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
 import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
+import com.yeoljeong.tripmate.payment.application.event.PaymentCompletedEvent;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class PaymentCommandService {
     private final TossPaymentClient tossPaymentClient;
     private final TossPaymentProperties tossPaymentProperties;
     private final PaymentFailureService paymentFailureService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
@@ -41,7 +44,7 @@ public class PaymentCommandService {
         String tossOrderId = generateTossOrderId(payableCommand.orderId());
 
         Payment payment = Payment.create(userId, payableCommand.orderId(), tossOrderId,
-                payableCommand.amount(), Instant.now());
+                payableCommand.orderName(), payableCommand.amount(), Instant.now());
 
         Payment savedPayment = paymentRepository.save(payment);
 
@@ -78,12 +81,26 @@ public class PaymentCommandService {
             throw e;
         }
 
-        paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
 
-        return ConfirmPaymentResult.of(payment.getUserId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
-                payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
-                payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
-                payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
+        PaymentCompletedEvent event = new PaymentCompletedEvent(
+                UUID.randomUUID(),
+                savedPayment.getUserId(),
+                savedPayment.getOrderId(),
+                savedPayment.getId(),
+                savedPayment.getProductName(),
+                savedPayment.getPaymentAmount().getApprovedAmount(),
+                savedPayment.getPaymentTimestamps().getApprovedAt(),
+                savedPayment.getPaymentMethod()
+        );
+
+        // 결제 성공 이벤트 발행
+        eventPublisher.publishEvent(event);
+
+        return ConfirmPaymentResult.of(savedPayment.getUserId(), savedPayment.getOrderId(), savedPayment.getTossPayment().getTossOrderId(),
+                savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
+                savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
+                savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
     }
 
     private String generateTossOrderId(UUID orderId) {
