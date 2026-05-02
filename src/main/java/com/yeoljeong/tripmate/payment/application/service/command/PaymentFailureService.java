@@ -1,6 +1,6 @@
 package com.yeoljeong.tripmate.payment.application.service.command;
 
-import com.yeoljeong.tripmate.payment.application.event.PaymentFailedEvent;
+import com.yeoljeong.tripmate.event.PaymentFailedEvent;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.yeoljeong.tripmate.payment.infrastructure.messaging;
 
 import com.yeoljeong.tripmate.event.enums.PaymentTopic;
-import com.yeoljeong.tripmate.payment.application.event.PaymentCompletedEvent;
-import com.yeoljeong.tripmate.payment.application.event.PaymentFailedEvent;
+import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.event.PaymentFailedEvent;
 import com.yeoljeong.tripmate.payment.application.port.PaymentEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
