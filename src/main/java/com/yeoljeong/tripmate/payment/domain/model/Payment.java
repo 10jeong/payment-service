@@ -46,6 +46,9 @@ public class Payment {
     @Column(name = "payment_method", length = 50)
     private String paymentMethod;
 
+    @Column(name = "product_name", length = 100)
+    private String productName;
+
     @Embedded
     private TossPayment tossPayment;
 
@@ -65,13 +68,14 @@ public class Payment {
     private String receiptUrl;
 
     @Builder
-    private Payment(UUID userId, UUID orderId, PaymentStatus paymentStatus, String paymentMethod,
+    private Payment(UUID userId, UUID orderId, PaymentStatus paymentStatus, String paymentMethod, String productName,
                     TossPayment tossPayment, PaymentAmount paymentAmount, String failureCode, String failureReason,
                     PaymentTimestamps paymentTimestamps, String receiptUrl) {
         this.userId = userId;
         this.orderId = orderId;
         this.paymentStatus = paymentStatus;
         this.paymentMethod = paymentMethod;
+        this.productName = productName;
         this.tossPayment = tossPayment;
         this.paymentAmount = paymentAmount;
         this.failureCode = failureCode;
@@ -80,8 +84,8 @@ public class Payment {
         this.receiptUrl = receiptUrl;
     }
 
-    public static Payment create(UUID userId, UUID orderId, String tossOrderId,
-                                 BigDecimal requestedAmount, Instant requestedAt) {
+    public static Payment create(UUID userId, UUID orderId, String productName,
+                                 String tossOrderId, BigDecimal requestedAmount, Instant requestedAt) {
         validateRequiredIds(userId, orderId);
         validateRequiredTossOrderId(tossOrderId);
 
@@ -90,6 +94,7 @@ public class Payment {
                 .orderId(orderId)
                 .paymentStatus(PaymentStatus.READY)
                 .paymentMethod(null)
+                .productName(productName)
                 .tossPayment(TossPayment.of(tossOrderId))
                 .paymentAmount(PaymentAmount.of(requestedAmount))
                 .failureCode(null)
