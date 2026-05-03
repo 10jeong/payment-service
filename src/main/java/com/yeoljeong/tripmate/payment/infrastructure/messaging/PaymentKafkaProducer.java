@@ -21,8 +21,8 @@ public class PaymentKafkaProducer implements PaymentEventPublisher {
         kafkaTemplate.send(PaymentTopic.PAYMENT_COMPLETED_TOPIC,event.paymentId().toString(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
-                        log.error("payment.completed 발행 실패 - eventId={}, paymentId={}, orderId={}, productName={}, paymentPrice={}, paymentMethod={}",
-                                event.eventId(), event.paymentId(), event.orderId(),
+                        log.error("payment.completed 발행 실패 - eventHash={}, paymentId={}, orderId={}, productName={}, paymentPrice={}, paymentMethod={}",
+                                event.eventHash(), event.paymentId(), event.orderId(),
                                 event.productName(), event.paymentPrice(), event.paymentMethod(), ex);
                     }
                 });
@@ -33,8 +33,8 @@ public class PaymentKafkaProducer implements PaymentEventPublisher {
         kafkaTemplate.send(PaymentTopic.PAYMENT_FAILED_TOPIC,event.paymentId().toString(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
-                        log.error("payment.failed 발행 실패 - eventId={}, paymentId={}, orderId={}, productName={}, paymentPrice={}, errorMessage={}",
-                                event.eventId(), event.paymentId(), event.orderId(),
+                        log.error("payment.failed 발행 실패 - eventHash={}, paymentId={}, orderId={}, productName={}, paymentPrice={}, errorMessage={}",
+                                event.eventHash(), event.paymentId(), event.orderId(),
                                 event.productName(), event.paymentPrice(), event.paymentErrorMessage(), ex);
                     }
                 });

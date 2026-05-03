@@ -13,6 +13,7 @@ import com.yeoljeong.tripmate.response.constants.CommonSuccessCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 @RestController
@@ -30,7 +31,7 @@ public class PaymentController {
     }
 
     @PostMapping("/confirm")
-    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestHeader("X-User-Id") UUID userId, @RequestBody ConfirmPaymentRequest request) {
+    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestHeader("X-User-Id") UUID userId, @RequestBody ConfirmPaymentRequest request) throws NoSuchAlgorithmException {
         ConfirmPaymentCommand command = new ConfirmPaymentCommand(request.paymentKey(), request.tossOrderId(), request.amount());
         ConfirmPaymentResult result = commandService.confirmPayment(userId, command);
 
