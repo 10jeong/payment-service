@@ -45,8 +45,8 @@ public class PaymentCommandService {
 
         String tossOrderId = generateTossOrderId(payableCommand.orderId());
 
-        Payment payment = Payment.create(userId, payableCommand.orderId(), tossOrderId,
-                payableCommand.orderName(), payableCommand.amount(), Instant.now());
+        Payment payment = Payment.create(userId, payableCommand.orderId(),
+                payableCommand.orderName(), tossOrderId, payableCommand.amount(), Instant.now());
 
         Payment savedPayment = paymentRepository.save(payment);
 
