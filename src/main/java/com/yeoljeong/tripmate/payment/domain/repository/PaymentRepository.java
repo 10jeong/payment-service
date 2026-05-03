@@ -16,5 +16,8 @@ public interface PaymentRepository {
     // toss_order_id로 Payment 조회
     Optional<Payment> findByTossPayment_TossOrderId(String tossOrderId);
 
+    // paymentId와 userId로 Payment 단건 조회
+    Optional<Payment> findByIdAndUserId(UUID paymentId, UUID userId);
+
     Payment save(Payment payment);
 }
