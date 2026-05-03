@@ -32,7 +32,7 @@ ext {
 }
 
 dependencies {
-    implementation 'com.yeoljeong:common-module:0.0.8-SNAPSHOT'
+    implementation 'com.yeoljeong:common-module:1.0.0-SNAPSHOT'
 
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

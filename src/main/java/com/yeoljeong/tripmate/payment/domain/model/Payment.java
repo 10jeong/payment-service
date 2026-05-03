@@ -1,5 +1,6 @@
 package com.yeoljeong.tripmate.payment.domain.model;
 
+import com.yeoljeong.tripmate.domain.BaseAuditEntity;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
@@ -27,7 +28,7 @@ import java.util.UUID;
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Payment {
+public class Payment extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(nullable = false)

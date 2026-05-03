@@ -1,5 +1,6 @@
 package com.yeoljeong.tripmate.payment.application.service.command;
 
+import com.yeoljeong.tripmate.event.EventUtils;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.application.client.OrderClient;
 import com.yeoljeong.tripmate.payment.application.client.TossPaymentClient;
@@ -19,6 +20,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -52,7 +54,7 @@ public class PaymentCommandService {
                 tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
     }
 
-    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) {
+    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) throws NoSuchAlgorithmException {
         Payment payment = paymentRepository.findByTossPayment_TossOrderId(request.tossOrderId())
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
@@ -84,7 +86,7 @@ public class PaymentCommandService {
         Payment savedPayment = paymentRepository.save(payment);
 
         PaymentCompletedEvent event = new PaymentCompletedEvent(
-                UUID.randomUUID(),
+                EventUtils.getEventHash("payment", savedPayment.getId().toString(), savedPayment.getUpdatedAt()),
                 savedPayment.getUserId(),
                 savedPayment.getOrderId(),
                 savedPayment.getId(),

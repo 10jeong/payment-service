@@ -1,5 +1,6 @@
 package com.yeoljeong.tripmate.payment.application.service.command;
 
+import com.yeoljeong.tripmate.event.EventUtils;
 import com.yeoljeong.tripmate.event.PaymentFailedEvent;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
 
 @Service
@@ -19,12 +21,12 @@ public class PaymentFailureService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void fail(Payment payment, String failureCode, String failureReason) {
+    public void fail(Payment payment, String failureCode, String failureReason) throws NoSuchAlgorithmException {
         payment.fail(failureCode, failureReason);
         Payment savedPayment = paymentRepository.save(payment);
 
         PaymentFailedEvent event = new PaymentFailedEvent(
-                UUID.randomUUID(),
+                EventUtils.getEventHash("payment", savedPayment.getId().toString(), savedPayment.getUpdatedAt()),
                 savedPayment.getUserId(),
                 savedPayment.getOrderId(),
                 savedPayment.getId(),
