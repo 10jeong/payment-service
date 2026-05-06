@@ -1,5 +1,7 @@
 package com.yeoljeong.tripmate.payment.presentation.controller;
 
+import com.yeoljeong.tripmate.auth.annotation.LoginUser;
+import com.yeoljeong.tripmate.auth.context.UserContext;
 import com.yeoljeong.tripmate.payment.application.dto.command.ConfirmPaymentCommand;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
@@ -28,23 +30,23 @@ public class PaymentController {
     private final PaymentQueryService queryService;
 
     @PostMapping
-    public ApiResponse<CreatePaymentResponse> createPayment(@RequestHeader("X-User-Id") UUID userId, @RequestBody CreatePaymentRequest request) {
-        CreatePaymentResult result = commandService.createPayment(userId, request.orderId());
+    public ApiResponse<CreatePaymentResponse> createPayment(@LoginUser UserContext userContext, @RequestBody CreatePaymentRequest request) {
+        CreatePaymentResult result = commandService.createPayment(userContext.userId(), request.orderId());
 
         return ApiResponse.success(CommonSuccessCode.OK, CreatePaymentResponse.from(result));
     }
 
     @PostMapping("/confirm")
-    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@RequestHeader("X-User-Id") UUID userId, @RequestBody ConfirmPaymentRequest request) throws NoSuchAlgorithmException {
+    public ApiResponse<ConfirmPaymentResponse> confirmPayment(@LoginUser UserContext userContext, @RequestBody ConfirmPaymentRequest request) throws NoSuchAlgorithmException {
         ConfirmPaymentCommand command = new ConfirmPaymentCommand(request.paymentKey(), request.tossOrderId(), request.amount());
-        ConfirmPaymentResult result = commandService.confirmPayment(userId, command);
+        ConfirmPaymentResult result = commandService.confirmPayment(userContext.userId(), command);
 
         return ApiResponse.success(CommonSuccessCode.OK, ConfirmPaymentResponse.from(result));
     }
 
     @GetMapping("/{paymentId}")
-    public ApiResponse<GetPaymentResponse> getOrder(@RequestHeader("X-User-Id") UUID userId, @PathVariable("paymentId") UUID paymentId) {
-        GetPaymentResult result = queryService.getPayment(paymentId, userId);
+    public ApiResponse<GetPaymentResponse> getOrder(@LoginUser UserContext userContext, @PathVariable("paymentId") UUID paymentId) {
+        GetPaymentResult result = queryService.getPayment(paymentId, userContext.userId());
         return ApiResponse.success(CommonSuccessCode.OK, GetPaymentResponse.from(result));
     }
 }
