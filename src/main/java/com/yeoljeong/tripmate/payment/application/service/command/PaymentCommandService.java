@@ -61,7 +61,7 @@ public class PaymentCommandService {
         validatePaymentOwner(userId, payment);
 
         if (payment.isDone()) {
-            return ConfirmPaymentResult.of(payment.getUserId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
+            return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
                     payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
                     payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
                     payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
@@ -99,7 +99,7 @@ public class PaymentCommandService {
         // 결제 성공 이벤트 발행
         eventPublisher.publishEvent(event);
 
-        return ConfirmPaymentResult.of(savedPayment.getUserId(), savedPayment.getOrderId(), savedPayment.getTossPayment().getTossOrderId(),
+        return ConfirmPaymentResult.of(savedPayment.getId(), savedPayment.getOrderId(), savedPayment.getTossPayment().getTossOrderId(),
                 savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
                 savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
                 savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
