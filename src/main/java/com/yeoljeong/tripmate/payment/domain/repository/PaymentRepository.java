@@ -19,7 +19,7 @@ public interface PaymentRepository {
     // paymentId와 userId로 Payment 단건 조회
     Optional<Payment> findByIdAndUserId(UUID paymentId, UUID userId);
 
-    // toss_order_id 중 DONE 상태값인 Payment 조회
+    // toss_order_id와 상태값으로 Payment 조회
     Optional<Payment> findByTossPayment_TossOrderIdAndStatus(String tossOrderId, PaymentStatus paymentStatus);
 
     Optional<Payment> findByOrderIdAndPaymentStatus(UUID orderId, PaymentStatus paymentStatus);
