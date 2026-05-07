@@ -54,8 +54,8 @@ public class PaymentCommandService {
                 tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
     }
 
-    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) throws NoSuchAlgorithmException {
-        Payment payment = paymentRepository.findByTossPayment_TossOrderId(request.tossOrderId())
+    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand command) throws NoSuchAlgorithmException {
+        Payment payment = paymentRepository.findByTossPayment_TossOrderId(command.tossOrderId())
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         validatePaymentOwner(userId, payment);
@@ -71,10 +71,10 @@ public class PaymentCommandService {
             throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
         }
 
-        payment.getPaymentAmount().validateAmount(request.amount());
+        payment.getPaymentAmount().validateAmount(command.amount());
 
         try {
-            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(request.paymentKey(), request.tossOrderId(), request.amount());
+            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(command.paymentKey(), command.tossOrderId(), command.amount());
 
             payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
                     tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
