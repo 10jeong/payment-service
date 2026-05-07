@@ -36,7 +36,8 @@ public enum PaymentErrorCode implements ErrorCode {
     INVALID_ORDER_PAYMENT_RESPONSE(HttpStatus.BAD_GATEWAY, "주문 결제 응답이 올바르지 않습니다."),
     TOSS_PAYMENT_CLIENT_ERROR(HttpStatus.BAD_REQUEST, "토스 결제 요청이 올바르지 않습니다."),
     PAYMENT_ALREADY_COMPLETED(HttpStatus.CONFLICT, "이미 결제가 완료된 주문입니다."),
-    PAYMENT_CONFIRM_RESULT_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "이미 처리된 결제이지만 완료된 결제 정보를 찾을 수 없습니다.");
+    PAYMENT_CONFIRM_RESULT_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "이미 처리된 결제이지만 완료된 결제 정보를 찾을 수 없습니다."),
+    OUTBOX_SERIALIZATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "아웃박스 이벤트 직렬화에 실패했습니다.");
 
     private final HttpStatus status;
     private final String description;
