@@ -10,6 +10,8 @@ import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
 import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentException;
+import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentFailureReason;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
@@ -83,6 +85,15 @@ public class PaymentCommandService {
         } catch (BusinessException e) {
             paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
             throw e;
+        } catch (ExternalPaymentException e) {
+
+            // 이미 처리된 결제인 경우, 기존 DONE 결제 반환
+            if (e.getReason() == ExternalPaymentFailureReason.ALREADY_PROCESSED) {
+                return findCompletedPaymentResult(command);
+            }
+
+            paymentFailureService.fail(payment, e.getReason().name(), e.getMessage());
+            throw e;
         }
 
         Payment savedPayment = paymentRepository.save(payment);
@@ -105,6 +116,18 @@ public class PaymentCommandService {
                 savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
                 savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
                 savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
+    }
+
+    private ConfirmPaymentResult findCompletedPaymentResult(ConfirmPaymentCommand command) {
+        Payment completedPayment = paymentRepository.findByTossPayment_TossOrderIdAndStatus(command.tossOrderId(), PaymentStatus.DONE)
+                .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_CONFIRM_RESULT_NOT_FOUND));
+
+        validatePaymentKey(command.paymentKey(), completedPayment.getTossPayment().getPaymentKey());
+
+        return ConfirmPaymentResult.of(completedPayment.getId(), completedPayment.getOrderId(), completedPayment.getTossPayment().getTossOrderId(),
+                completedPayment.getTossPayment().getPaymentKey(), completedPayment.getPaymentStatus(), completedPayment.getPaymentMethod(),
+                completedPayment.getPaymentAmount().getRequestedAmount(), completedPayment.getPaymentAmount().getApprovedAmount(),
+                completedPayment.getReceiptUrl(), completedPayment.getPaymentTimestamps().getApprovedAt());
     }
 
     private void validatePaymentKey(String commandPaymentKey, String paymentKey) {
