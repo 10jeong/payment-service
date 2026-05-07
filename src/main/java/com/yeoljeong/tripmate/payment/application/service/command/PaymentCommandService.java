@@ -44,14 +44,14 @@ public class PaymentCommandService {
 
         Optional<Payment> readyPayment = paymentRepository.findByOrderIdAndPaymentStatus(orderId, PaymentStatus.READY);
 
+        validateOrderOwner(userId, payableCommand);
+        validatePayableOrder(payableCommand);
+        validatePaymentNotCompleted(payableCommand.orderId());
+
         if (readyPayment.isPresent()) {
             return CreatePaymentResult.of(readyPayment.get(), payableCommand.orderName(),
                     tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
         }
-
-        validateOrderOwner(userId, payableCommand);
-        validatePayableOrder(payableCommand);
-        validatePaymentNotCompleted(payableCommand.orderId());
 
         String tossOrderId = generateTossOrderId(payableCommand.orderId());
 
