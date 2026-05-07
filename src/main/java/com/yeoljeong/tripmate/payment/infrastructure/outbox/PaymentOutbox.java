@@ -2,9 +2,11 @@ package com.yeoljeong.tripmate.payment.infrastructure.outbox;
 
 import com.yeoljeong.tripmate.domain.Outbox;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.util.UUID;
 
+@Getter
 @Entity
 @Table(name = "payment_outbox")
 public class PaymentOutbox extends Outbox {
