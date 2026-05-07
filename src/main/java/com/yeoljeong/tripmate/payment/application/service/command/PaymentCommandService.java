@@ -10,6 +10,8 @@ import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
 import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentException;
+import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentFailureReason;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -39,9 +42,16 @@ public class PaymentCommandService {
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
 
+        Optional<Payment> readyPayment = paymentRepository.findByOrderIdAndPaymentStatus(orderId, PaymentStatus.READY);
+
         validateOrderOwner(userId, payableCommand);
         validatePayableOrder(payableCommand);
         validatePaymentNotCompleted(payableCommand.orderId());
+
+        if (readyPayment.isPresent()) {
+            return CreatePaymentResult.of(readyPayment.get(), payableCommand.orderName(),
+                    tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
+        }
 
         String tossOrderId = generateTossOrderId(payableCommand.orderId());
 
@@ -54,13 +64,15 @@ public class PaymentCommandService {
                 tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
     }
 
-    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand request) throws NoSuchAlgorithmException {
-        Payment payment = paymentRepository.findByTossPayment_TossOrderId(request.tossOrderId())
+    public ConfirmPaymentResult confirmPayment(UUID userId, ConfirmPaymentCommand command) throws NoSuchAlgorithmException {
+        Payment payment = paymentRepository.findByTossPayment_TossOrderId(command.tossOrderId())
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
         validatePaymentOwner(userId, payment);
 
         if (payment.isDone()) {
+            validatePaymentKey(command.paymentKey(), payment.getTossPayment().getPaymentKey());
+
             return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
                     payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
                     payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
@@ -71,15 +83,24 @@ public class PaymentCommandService {
             throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
         }
 
-        payment.getPaymentAmount().validateAmount(request.amount());
+        payment.getPaymentAmount().validateAmount(command.amount());
 
         try {
-            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(request.paymentKey(), request.tossOrderId(), request.amount());
+            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(command.paymentKey(), command.tossOrderId(), command.amount());
 
             payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
                     tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
         } catch (BusinessException e) {
             paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
+            throw e;
+        } catch (ExternalPaymentException e) {
+
+            // 이미 처리된 결제인 경우, 기존 DONE 결제 반환
+            if (e.getReason() == ExternalPaymentFailureReason.ALREADY_PROCESSED) {
+                return findCompletedPaymentResult(command);
+            }
+
+            paymentFailureService.fail(payment, e.getReason().name(), e.getMessage());
             throw e;
         }
 
@@ -103,6 +124,24 @@ public class PaymentCommandService {
                 savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
                 savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
                 savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
+    }
+
+    private ConfirmPaymentResult findCompletedPaymentResult(ConfirmPaymentCommand command) {
+        Payment completedPayment = paymentRepository.findByTossPayment_TossOrderIdAndStatus(command.tossOrderId(), PaymentStatus.DONE)
+                .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_CONFIRM_RESULT_NOT_FOUND));
+
+        validatePaymentKey(command.paymentKey(), completedPayment.getTossPayment().getPaymentKey());
+
+        return ConfirmPaymentResult.of(completedPayment.getId(), completedPayment.getOrderId(), completedPayment.getTossPayment().getTossOrderId(),
+                completedPayment.getTossPayment().getPaymentKey(), completedPayment.getPaymentStatus(), completedPayment.getPaymentMethod(),
+                completedPayment.getPaymentAmount().getRequestedAmount(), completedPayment.getPaymentAmount().getApprovedAmount(),
+                completedPayment.getReceiptUrl(), completedPayment.getPaymentTimestamps().getApprovedAt());
+    }
+
+    private void validatePaymentKey(String commandPaymentKey, String paymentKey) {
+        if (commandPaymentKey == null || !commandPaymentKey.equals(paymentKey)) {
+            throw new BusinessException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+        }
     }
 
     private String generateTossOrderId(UUID orderId) {
