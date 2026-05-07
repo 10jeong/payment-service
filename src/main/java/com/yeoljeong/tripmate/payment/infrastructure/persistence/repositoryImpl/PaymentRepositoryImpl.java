@@ -40,4 +40,9 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     public Payment save(Payment payment) {
         return paymentJpaRepository.save(payment);
     }
+
+    @Override
+    public Optional<Payment> findByTossPayment_TossOrderIdAndStatus(String tossOrderId, PaymentStatus paymentStatus) {
+        return paymentJpaRepository.findByTossPayment_TossOrderIdAndPaymentStatus(tossOrderId, paymentStatus);
+    }
 }

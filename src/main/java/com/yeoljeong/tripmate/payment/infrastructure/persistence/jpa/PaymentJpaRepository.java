@@ -12,4 +12,5 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, UUID> {
     boolean existsByOrderIdAndPaymentStatus(UUID orderId, PaymentStatus status);
     Optional<Payment> findByTossPayment_TossOrderId(String tossOrderId);
     Optional<Payment> findByIdAndUserId(UUID id, UUID userId);
+    Optional<Payment> findByTossPayment_TossOrderIdAndPaymentStatus(String tossOrderId, PaymentStatus status);
 }

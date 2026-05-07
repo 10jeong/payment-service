@@ -20,4 +20,7 @@ public interface PaymentRepository {
     Optional<Payment> findByIdAndUserId(UUID paymentId, UUID userId);
 
     Payment save(Payment payment);
+
+    // toss_order_id 중 DONE 상태값인 Payment 조회
+    Optional<Payment> findByTossPayment_TossOrderIdAndStatus(String tossOrderId, PaymentStatus paymentStatus);
 }
