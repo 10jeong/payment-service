@@ -61,6 +61,8 @@ public class PaymentCommandService {
         validatePaymentOwner(userId, payment);
 
         if (payment.isDone()) {
+            validatePaymentKey(command.paymentKey(), payment.getTossPayment().getPaymentKey());
+
             return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
                     payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
                     payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
@@ -103,6 +105,12 @@ public class PaymentCommandService {
                 savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
                 savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
                 savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
+    }
+
+    private void validatePaymentKey(String commandPaymentKey, String paymentKey) {
+        if (commandPaymentKey == null || !commandPaymentKey.equals(paymentKey)) {
+            throw new BusinessException(PaymentErrorCode.INVALID_PAYMENT_KEY);
+        }
     }
 
     private String generateTossOrderId(UUID orderId) {
