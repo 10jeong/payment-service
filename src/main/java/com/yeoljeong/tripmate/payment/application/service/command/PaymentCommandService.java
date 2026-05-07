@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,6 +41,13 @@ public class PaymentCommandService {
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
+
+        Optional<Payment> readyPayment = paymentRepository.findByOrderIdAndPaymentStatus(orderId, PaymentStatus.READY);
+
+        if (readyPayment.isPresent()) {
+            return CreatePaymentResult.of(readyPayment.get(), payableCommand.orderName(),
+                    tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
+        }
 
         validateOrderOwner(userId, payableCommand);
         validatePayableOrder(payableCommand);
