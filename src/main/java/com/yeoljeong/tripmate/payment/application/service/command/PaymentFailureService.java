@@ -7,20 +7,17 @@ import com.yeoljeong.tripmate.payment.application.port.PaymentOutboxRecorder;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.NoSuchAlgorithmException;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentFailureService {
 
     private final PaymentRepository paymentRepository;
-    private final ApplicationEventPublisher eventPublisher;
     private final PaymentOutboxRecorder paymentOutboxRecorder;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
