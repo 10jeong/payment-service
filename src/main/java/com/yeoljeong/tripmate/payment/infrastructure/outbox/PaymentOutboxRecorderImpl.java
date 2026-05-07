@@ -16,11 +16,11 @@ public class PaymentOutboxRecorderImpl implements PaymentOutboxRecorder {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void record(String topic, String payload) {
+    public void record(String topic, Object event) {
         try {
-            String jsonPayload = objectMapper.writeValueAsString(payload);
+            String payload = objectMapper.writeValueAsString(event);
 
-            PaymentOutbox outboxEvent = PaymentOutbox.create(topic, jsonPayload);
+            PaymentOutbox outboxEvent = PaymentOutbox.create(topic, payload);
 
             paymentOutboxRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
