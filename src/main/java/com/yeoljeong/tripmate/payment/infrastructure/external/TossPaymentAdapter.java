@@ -1,12 +1,10 @@
 package com.yeoljeong.tripmate.payment.infrastructure.external;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.application.client.TossPaymentClient;
 import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
 import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentException;
 import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentFailureReason;
-import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.infrastructure.external.dto.TossConfirmRequest;
 import com.yeoljeong.tripmate.payment.infrastructure.external.dto.TossConfirmResponse;
 import com.yeoljeong.tripmate.payment.infrastructure.external.dto.TossErrorResponse;
