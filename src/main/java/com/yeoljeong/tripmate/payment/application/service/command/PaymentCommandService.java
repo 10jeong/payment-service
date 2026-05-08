@@ -1,6 +1,8 @@
 package com.yeoljeong.tripmate.payment.application.service.command;
 
 import com.yeoljeong.tripmate.event.EventUtils;
+import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.event.enums.PaymentTopic;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.application.client.OrderClient;
 import com.yeoljeong.tripmate.payment.application.client.TossPaymentClient;
@@ -9,16 +11,15 @@ import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
 import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
-import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
 import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentException;
 import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentFailureReason;
+import com.yeoljeong.tripmate.payment.application.port.PaymentOutboxRecorder;
 import com.yeoljeong.tripmate.payment.application.properties.TossPaymentProperties;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,7 @@ public class PaymentCommandService {
     private final TossPaymentClient tossPaymentClient;
     private final TossPaymentProperties tossPaymentProperties;
     private final PaymentFailureService paymentFailureService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final PaymentOutboxRecorder paymentOutboxRecorder;
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
         PayableCommand payableCommand = orderClient.getOrderPayment(orderId);
@@ -117,8 +118,8 @@ public class PaymentCommandService {
                 savedPayment.getPaymentMethod()
         );
 
-        // 결제 성공 이벤트 발행
-        eventPublisher.publishEvent(event);
+        // 결제 성공 이벤트 outbox에 저장
+        paymentOutboxRecorder.record(PaymentTopic.PAYMENT_COMPLETED_TOPIC, event);
 
         return ConfirmPaymentResult.of(savedPayment.getId(), savedPayment.getOrderId(), savedPayment.getTossPayment().getTossOrderId(),
                 savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
