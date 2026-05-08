@@ -17,6 +17,14 @@ public class PaymentOutboxRecorderImpl implements PaymentOutboxRecorder {
 
     @Override
     public void record(String topic, Object event) {
+
+        if (topic == null || topic.isBlank()) {
+            throw new BusinessException(PaymentErrorCode.INVALID_TOPIC);
+        }
+        if (event == null) {
+            throw new BusinessException(PaymentErrorCode.INVALID_EVENT);
+        }
+
         try {
             String payload = objectMapper.writeValueAsString(event);
 
