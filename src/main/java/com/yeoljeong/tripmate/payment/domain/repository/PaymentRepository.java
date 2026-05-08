@@ -24,5 +24,7 @@ public interface PaymentRepository {
 
     Optional<Payment> findByOrderIdAndPaymentStatus(UUID orderId, PaymentStatus paymentStatus);
 
+    Optional<Payment> findByOrderIdAndUserId(UUID orderId, UUID userId);
+
     Payment save(Payment payment);
 }
