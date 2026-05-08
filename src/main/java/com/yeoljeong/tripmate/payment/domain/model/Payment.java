@@ -127,10 +127,21 @@ public class Payment extends BaseAuditEntity {
         this.paymentStatus = PaymentStatus.ABORTED;
     }
 
+    // 결제 취소
+    public void cancel(BigDecimal canceledAmount) {
+        validateDone();
+
+        this.paymentAmount.cancel(canceledAmount);
+        this.paymentStatus = PaymentStatus.CANCELLED;
+    }
+
     // 결제 완료 상태인지
     public boolean isDone() {
         return this.paymentStatus == PaymentStatus.DONE;
     }
+
+    // 결제 취소 상태인지
+    public boolean isCanceled() { return this.paymentStatus == PaymentStatus.CANCELLED; }
 
     private static void validateRequiredIds(UUID userId, UUID orderId) {
         if (userId == null) {
@@ -150,6 +161,12 @@ public class Payment extends BaseAuditEntity {
 
     private void validateReady() {
         if (this.paymentStatus != PaymentStatus.READY) {
+            throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
+        }
+    }
+
+    private void validateDone() {
+        if (!isDone()) {
             throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
         }
     }
