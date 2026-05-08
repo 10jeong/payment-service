@@ -2,13 +2,12 @@ package com.yeoljeong.tripmate.payment.application.service.command;
 
 import com.yeoljeong.tripmate.event.EventUtils;
 import com.yeoljeong.tripmate.event.PaymentCompletedEvent;
+import com.yeoljeong.tripmate.event.PaymentRefundedEvent;
 import com.yeoljeong.tripmate.event.enums.PaymentTopic;
 import com.yeoljeong.tripmate.exception.BusinessException;
 import com.yeoljeong.tripmate.payment.application.client.OrderClient;
 import com.yeoljeong.tripmate.payment.application.client.TossPaymentClient;
-import com.yeoljeong.tripmate.payment.application.dto.command.ConfirmPaymentCommand;
-import com.yeoljeong.tripmate.payment.application.dto.command.PayableCommand;
-import com.yeoljeong.tripmate.payment.application.dto.command.TossConfirmCommand;
+import com.yeoljeong.tripmate.payment.application.dto.command.*;
 import com.yeoljeong.tripmate.payment.application.dto.result.ConfirmPaymentResult;
 import com.yeoljeong.tripmate.payment.application.dto.result.CreatePaymentResult;
 import com.yeoljeong.tripmate.payment.application.exception.ExternalPaymentException;
@@ -20,14 +19,17 @@ import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -105,26 +107,24 @@ public class PaymentCommandService {
             throw e;
         }
 
-        Payment savedPayment = paymentRepository.save(payment);
-
         PaymentCompletedEvent event = new PaymentCompletedEvent(
-                EventUtils.getEventHash("payment", savedPayment.getId().toString(), savedPayment.getUpdatedAt()),
-                savedPayment.getUserId(),
-                savedPayment.getOrderId(),
-                savedPayment.getId(),
-                savedPayment.getProductName(),
-                savedPayment.getPaymentAmount().getApprovedAmount(),
-                savedPayment.getPaymentTimestamps().getApprovedAt(),
-                savedPayment.getPaymentMethod()
+                EventUtils.getEventHash("payment", payment.getId().toString(), payment.getUpdatedAt()),
+                payment.getUserId(),
+                payment.getOrderId(),
+                payment.getId(),
+                payment.getProductName(),
+                payment.getPaymentAmount().getApprovedAmount(),
+                payment.getPaymentTimestamps().getApprovedAt(),
+                payment.getPaymentMethod()
         );
 
         // 결제 성공 이벤트 outbox에 저장
         paymentOutboxRecorder.record(PaymentTopic.PAYMENT_COMPLETED_TOPIC, event);
 
-        return ConfirmPaymentResult.of(savedPayment.getId(), savedPayment.getOrderId(), savedPayment.getTossPayment().getTossOrderId(),
-                savedPayment.getTossPayment().getPaymentKey(), savedPayment.getPaymentStatus(), savedPayment.getPaymentMethod(),
-                savedPayment.getPaymentAmount().getRequestedAmount(), savedPayment.getPaymentAmount().getApprovedAmount(),
-                savedPayment.getReceiptUrl(), savedPayment.getPaymentTimestamps().getApprovedAt());
+        return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
+                payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
+                payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
+                payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
     }
 
     private ConfirmPaymentResult findCompletedPaymentResult(ConfirmPaymentCommand command) {
@@ -137,6 +137,48 @@ public class PaymentCommandService {
                 completedPayment.getTossPayment().getPaymentKey(), completedPayment.getPaymentStatus(), completedPayment.getPaymentMethod(),
                 completedPayment.getPaymentAmount().getRequestedAmount(), completedPayment.getPaymentAmount().getApprovedAmount(),
                 completedPayment.getReceiptUrl(), completedPayment.getPaymentTimestamps().getApprovedAt());
+    }
+
+    // 주문 취소 이벤트 수신 후 동작
+    public void refundPayment(RefundPaymentCommand refundPaymentCommand) throws NoSuchAlgorithmException {
+        Payment payment = paymentRepository.findByOrderIdAndUserId(refundPaymentCommand.orderId(), refundPaymentCommand.userId())
+                .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
+
+        if (payment.isCanceled()) {
+            // TODO: 조건부 UPDATE 결과로 멱등성 처리 필요
+
+            return;
+        }
+
+        if (!payment.isDone()) {
+            throw new BusinessException(PaymentErrorCode.PAYMENT_NOT_REFUNDABLE);
+        }
+
+        try {
+            // 토스 환불 API 요청
+            // TODO: 일정 취소 시 취소 사유를 이벤트로 전달 받아 적용
+            TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), "단순 변심");
+
+            payment.cancel(BigDecimal.valueOf(tossRefundCommand.totalAmount()));
+        } catch (ExternalPaymentException e) {
+            // TODO: REFUNDING 상태 추가 후 DONE 복구 로직 필요
+
+            log.warn("토스 환불 요청 실패. paymentId={}, tossOrderId={}", payment.getId(), payment.getTossPayment().getTossOrderId(), e);
+            throw e;
+        }
+
+        PaymentRefundedEvent event = new PaymentRefundedEvent(
+                EventUtils.getEventHash("payment", payment.getId().toString(), payment.getUpdatedAt()),
+                payment.getUserId(),
+                refundPaymentCommand.productId(),
+                refundPaymentCommand.productName(),
+                refundPaymentCommand.scheduleId(),
+                refundPaymentCommand.quantity(),
+                payment.getPaymentAmount().getCanceledAmount()
+        );
+
+        // 결제 환불 이벤트 outbox에 저장
+        paymentOutboxRecorder.record(PaymentTopic.PAYMENT_REFUNDED_TOPIC, event);
     }
 
     private void validatePaymentKey(String commandPaymentKey, String paymentKey) {
