@@ -131,6 +131,11 @@ public class Payment extends BaseAuditEntity {
     public void cancel(BigDecimal canceledAmount) {
         validateDone();
 
+        // 취소 금액 검증 로직
+        if (canceledAmount.compareTo(this.paymentAmount.getApprovedAmount()) != 0) {
+            throw new BusinessException(PaymentErrorCode.INVALID_CANCEL_AMOUNT);
+        }
+
         this.paymentAmount.cancel(canceledAmount);
         this.paymentStatus = PaymentStatus.CANCELLED;
     }

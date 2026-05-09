@@ -41,7 +41,8 @@ public enum PaymentErrorCode implements ErrorCode {
     INVALID_TOPIC(HttpStatus.INTERNAL_SERVER_ERROR, "토픽이 유효하지 않습니다."),
     INVALID_EVENT(HttpStatus.INTERNAL_SERVER_ERROR, "이벤트가 유효하지 않습니다."),
     PAYMENT_NOT_REFUNDABLE(HttpStatus.BAD_REQUEST, "환불 가능한 상태가 아닙니다."),
-    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_GATEWAY, "환불 처리가 실패했습니다." );
+    PAYMENT_CANCEL_FAILED(HttpStatus.BAD_GATEWAY, "환불 처리가 실패했습니다." ),
+    INVALID_CANCEL_AMOUNT(HttpStatus.BAD_REQUEST, "취소 금액이 승인 금액과 일치하지 않습니다.");
 
     private final HttpStatus status;
     private final String description;
