@@ -168,12 +168,13 @@ public class PaymentCommandService {
             TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), "단순 변심");
 
             if (!tossRefundCommand.isCanceled()) {
+                payment.restoreDone();
                 throw new BusinessException(PaymentErrorCode.PAYMENT_CANCEL_FAILED);
             }
 
             payment.cancel(BigDecimal.valueOf(tossRefundCommand.totalAmount()));
         } catch (ExternalPaymentException e) {
-            // TODO: REFUNDING 상태 추가 후 DONE 복구 로직 필요
+            payment.restoreDone();
 
             log.warn("토스 환불 요청 실패. paymentId={}, tossOrderId={}", payment.getId(), payment.getTossPayment().getTossOrderId(), e);
             throw e;
