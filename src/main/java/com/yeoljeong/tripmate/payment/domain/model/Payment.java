@@ -143,6 +143,9 @@ public class Payment extends BaseAuditEntity {
     // 결제 취소 상태인지
     public boolean isCanceled() { return this.paymentStatus == PaymentStatus.CANCELLED; }
 
+    // 환불중 상태인지
+    public boolean isRefunding() { return this.paymentStatus == PaymentStatus.REFUNDING; }
+
     private static void validateRequiredIds(UUID userId, UUID orderId) {
         if (userId == null) {
             throw new BusinessException(PaymentErrorCode.INVALID_USER_ID);

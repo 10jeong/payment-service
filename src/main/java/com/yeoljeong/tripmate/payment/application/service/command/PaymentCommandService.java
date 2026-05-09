@@ -144,13 +144,21 @@ public class PaymentCommandService {
         Payment payment = paymentRepository.findByOrderIdAndUserId(refundPaymentCommand.orderId(), refundPaymentCommand.userId())
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
-        if (payment.isCanceled()) {
-            // TODO: 조건부 UPDATE 결과로 멱등성 처리 필요
+        int updated = paymentRepository.updateStatusFromDoneToRefunding(payment.getId(), PaymentStatus.DONE, PaymentStatus.REFUNDING);
 
-            return;
-        }
+        // 선점하지 못한 상태
+        if (updated == 0) {
+            Payment latestPayment = paymentRepository.findById(payment.getId())
+                    .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
-        if (!payment.isDone()) {
+            if (latestPayment.isCanceled()) {
+                return;
+            }
+
+            if (latestPayment.isRefunding()) {
+                return;
+            }
+
             throw new BusinessException(PaymentErrorCode.PAYMENT_NOT_REFUNDABLE);
         }
 
