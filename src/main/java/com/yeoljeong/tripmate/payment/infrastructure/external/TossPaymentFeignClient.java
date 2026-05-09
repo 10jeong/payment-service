@@ -17,5 +17,5 @@ public interface TossPaymentFeignClient {
     TossConfirmResponse confirm(@RequestBody TossConfirmRequest request);
 
     @PostMapping("/v1/payments/{paymentKey}/cancel")
-    TossRefundResponse refundPayment(@PathVariable String paymentKey, @RequestBody TossRefundRequest request);
+    TossRefundResponse refundPayment(@PathVariable("paymentKey") String paymentKey, @RequestBody TossRefundRequest request);
 }
