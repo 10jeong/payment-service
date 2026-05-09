@@ -40,6 +40,7 @@ public class PaymentCommandService {
     private final TossPaymentClient tossPaymentClient;
     private final TossPaymentProperties tossPaymentProperties;
     private final PaymentFailureService paymentFailureService;
+    private final PaymentRefundRecoveryService paymentRefundRecoveryService;
     private final PaymentOutboxRecorder paymentOutboxRecorder;
 
     public CreatePaymentResult createPayment(UUID userId, UUID orderId) {
@@ -170,13 +171,13 @@ public class PaymentCommandService {
             TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), "단순 변심");
 
             if (!tossRefundCommand.isCanceled()) {
-                payment.restoreDone();
+                paymentRefundRecoveryService.restoreDone(payment.getId());
                 throw new BusinessException(PaymentErrorCode.PAYMENT_CANCEL_FAILED);
             }
 
             payment.cancel(BigDecimal.valueOf(tossRefundCommand.totalAmount()));
         } catch (ExternalPaymentException e) {
-            payment.restoreDone();
+            paymentRefundRecoveryService.restoreDone(payment.getId());
 
             log.warn("토스 환불 요청 실패. paymentId={}, tossOrderId={}", payment.getId(), payment.getTossPayment().getTossOrderId(), e);
             throw e;
