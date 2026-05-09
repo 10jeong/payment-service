@@ -44,6 +44,10 @@ public class TossPaymentAdapter implements TossPaymentClient {
     @Override
     public TossRefundCommand refundPayment(String paymentKey, String cancelReason) {
 
+        if (cancelReason == null || cancelReason.isBlank()) {
+            throw new ExternalPaymentException(ExternalPaymentFailureReason.CLIENT_ERROR, "취소 사유는 필수입니다.");
+        }
+
         try {
             TossRefundResponse tossRefundResponse = tossPaymentFeignClient.refundPayment(paymentKey, new TossRefundRequest(cancelReason));
 
