@@ -22,7 +22,8 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, UUID> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
     UPDATE Payment p
-    SET p.paymentStatus = :refundStatus
+    SET p.paymentStatus = :refundStatus,
+        p.updatedAt = CURRENT_TIMESTAMP
     WHERE p.id = :paymentId
       AND p.paymentStatus = :doneStatus
     """)
