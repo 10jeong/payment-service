@@ -152,10 +152,12 @@ public class PaymentCommandService {
                     .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
             if (latestPayment.isCanceled()) {
+                log.info("환불이 이미 완료되었습니다. paymentId={}, orderId={}", latestPayment.getId(), refundPaymentCommand.orderId());
                 return;
             }
 
             if (latestPayment.isRefunding()) {
+                log.info("환불이 이미 진행 중입니다. paymentId={}, orderId={}", latestPayment.getId(), refundPaymentCommand.orderId());
                 return;
             }
 
