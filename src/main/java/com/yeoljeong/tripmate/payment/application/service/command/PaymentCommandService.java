@@ -159,9 +159,11 @@ public class PaymentCommandService {
             // TODO: 일정 취소 시 취소 사유를 이벤트로 전달 받아 적용
             TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), "단순 변심");
 
-            if (tossRefundCommand.isCanceled()) {
-                payment.cancel(BigDecimal.valueOf(tossRefundCommand.totalAmount()));
+            if (!tossRefundCommand.isCanceled()) {
+                throw new BusinessException(PaymentErrorCode.PAYMENT_CANCEL_FAILED);
             }
+
+            payment.cancel(BigDecimal.valueOf(tossRefundCommand.totalAmount()));
         } catch (ExternalPaymentException e) {
             // TODO: REFUNDING 상태 추가 후 DONE 복구 로직 필요
 
