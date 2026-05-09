@@ -29,7 +29,7 @@ public class OrderKafkaConsumer {
 
         try {
             commandService.refundPayment(new RefundPaymentCommand(event.orderId(), event.userId(),
-                    event.planUnitId(), event.productId(), event.scheduleId(), event.quantity()));
+                    event.planUnitId(), event.productId(), event.productName(), event.scheduleId(), event.quantity()));
             acknowledgment.acknowledge();
 
             log.info("[Payment] order.cancelled 이벤트 처리 성공: orderId={}", event.orderId());

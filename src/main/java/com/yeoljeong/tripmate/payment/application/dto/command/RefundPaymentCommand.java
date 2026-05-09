@@ -7,6 +7,7 @@ public record RefundPaymentCommand(
         UUID userId,
         UUID planUnitId,
         UUID productId,
+        String productName,
         UUID scheduleId,
         int quantity
 ) { }
