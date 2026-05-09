@@ -127,9 +127,37 @@ public class Payment extends BaseAuditEntity {
         this.paymentStatus = PaymentStatus.ABORTED;
     }
 
+    // 결제 취소
+    public void cancel(BigDecimal canceledAmount) {
+        validateDone();
+
+        // 취소 금액 검증 로직
+        if (canceledAmount.compareTo(this.paymentAmount.getApprovedAmount()) != 0) {
+            throw new BusinessException(PaymentErrorCode.INVALID_CANCEL_AMOUNT);
+        }
+
+        this.paymentAmount.cancel(canceledAmount);
+        this.paymentStatus = PaymentStatus.CANCELLED;
+    }
+
     // 결제 완료 상태인지
     public boolean isDone() {
         return this.paymentStatus == PaymentStatus.DONE;
+    }
+
+    // 결제 취소 상태인지
+    public boolean isCanceled() { return this.paymentStatus == PaymentStatus.CANCELLED; }
+
+    // 환불중 상태인지
+    public boolean isRefunding() { return this.paymentStatus == PaymentStatus.REFUNDING; }
+
+    // Refunding에서 다시 Done으로 상태 복구
+    public void restoreDone() {
+        if (this.paymentStatus != PaymentStatus.REFUNDING) {
+            throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
+        }
+
+        this.paymentStatus = PaymentStatus.DONE;
     }
 
     private static void validateRequiredIds(UUID userId, UUID orderId) {
@@ -150,6 +178,12 @@ public class Payment extends BaseAuditEntity {
 
     private void validateReady() {
         if (this.paymentStatus != PaymentStatus.READY) {
+            throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
+        }
+    }
+
+    private void validateDone() {
+        if (!isDone()) {
             throw new BusinessException(PaymentErrorCode.STATUS_UPDATE_NOT_AVAILABLE);
         }
     }

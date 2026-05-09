@@ -24,5 +24,12 @@ public interface PaymentRepository {
 
     Optional<Payment> findByOrderIdAndPaymentStatus(UUID orderId, PaymentStatus paymentStatus);
 
+    Optional<Payment> findByOrderIdAndUserId(UUID orderId, UUID userId);
+
+    // Done에서 Refunding으로 변화 시 조건부 Update를 사용하여 선점 처리
+    int updateStatusFromDoneToRefunding(UUID paymentId, PaymentStatus doneStatus, PaymentStatus refundStatus);
+
+    Optional<Payment> findById(UUID paymentId);
+
     Payment save(Payment payment);
 }
