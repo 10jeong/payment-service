@@ -18,6 +18,7 @@ public interface PaymentJpaRepository extends JpaRepository<Payment, UUID> {
     Optional<Payment> findByTossPayment_TossOrderIdAndPaymentStatus(String tossOrderId, PaymentStatus status);
     Optional<Payment> findByOrderIdAndPaymentStatus(UUID orderId, PaymentStatus status);
     Optional<Payment> findByOrderIdAndUserId(UUID orderId, UUID userId);
+    Optional<Payment> findByOrderId(UUID orderId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

@@ -31,5 +31,8 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(UUID paymentId);
 
+    // orderId로 Payment 조회
+    Optional<Payment> findByOrderId(UUID orderId);
+
     Payment save(Payment payment);
 }
