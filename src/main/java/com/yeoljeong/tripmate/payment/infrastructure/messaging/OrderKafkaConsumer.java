@@ -27,9 +27,11 @@ public class OrderKafkaConsumer {
     public void consumeOrderCancelled(OrderCancelledEvent event, Acknowledgment acknowledgment) throws NoSuchAlgorithmException {
         log.info("[Payment] order.cancelled 이벤트 수신: orderId={}", event.orderId());
 
+        String reason = (event.reason() == null || event.reason().isBlank()) ? "일정 탈퇴" : event.reason();
+
         try {
-            commandService.refundPayment(new RefundPaymentCommand(event.orderId(), event.userId(),
-                    event.planUnitId(), event.productId(), event.productName(), event.scheduleId(), event.quantity()));
+            commandService.refundPayment(new RefundPaymentCommand(event.orderId(), event.userId(), event.planUnitId(),
+                    reason, event.productId(), event.productName(), event.scheduleId(), event.quantity()));
             acknowledgment.acknowledge();
 
             log.info("[Payment] order.cancelled 이벤트 처리 성공: orderId={}", event.orderId());
