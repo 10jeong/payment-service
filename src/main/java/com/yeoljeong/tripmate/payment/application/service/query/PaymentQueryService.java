@@ -6,7 +6,6 @@ import com.yeoljeong.tripmate.payment.application.dto.result.PaymentExistenceRes
 import com.yeoljeong.tripmate.payment.domain.exception.PaymentErrorCode;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 import com.yeoljeong.tripmate.payment.domain.repository.PaymentRepository;
-import com.yeoljeong.tripmate.payment.presentation.dto.response.PaymentExistenceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
