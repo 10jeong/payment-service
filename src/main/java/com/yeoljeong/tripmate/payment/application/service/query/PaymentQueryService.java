@@ -30,7 +30,7 @@ public class PaymentQueryService {
 
     // 결제 생성 여부 조회
     public PaymentExistenceResult getExistencePayment(UUID orderId) {
-        return paymentRepository.findByOrderId(orderId)
+        return paymentRepository.findFirstByOrderIdOrderByCreatedAtDesc(orderId)
                 .map(payment -> new PaymentExistenceResult(true, payment.getPaymentStatus().name()))
                 .orElseGet(() -> new PaymentExistenceResult(false, null));
     }

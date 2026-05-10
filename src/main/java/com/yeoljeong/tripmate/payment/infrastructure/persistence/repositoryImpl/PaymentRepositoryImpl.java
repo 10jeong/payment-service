@@ -62,8 +62,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public Optional<Payment> findByOrderId(UUID orderId) {
-        return paymentJpaRepository.findByOrderId(orderId);
+    public Optional<Payment> findFirstByOrderIdOrderByCreatedAtDesc(UUID orderId) {
+        return paymentJpaRepository.findFirstByOrderIdOrderByCreatedAtDesc(orderId);
     }
 
     @Override

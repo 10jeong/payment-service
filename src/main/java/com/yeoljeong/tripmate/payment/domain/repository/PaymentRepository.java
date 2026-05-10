@@ -3,6 +3,7 @@ package com.yeoljeong.tripmate.payment.domain.repository;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,8 +32,8 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(UUID paymentId);
 
-    // orderId로 Payment 조회
-    Optional<Payment> findByOrderId(UUID orderId);
+    // orderId로 가장 최근 Payment 조회
+    Optional<Payment> findFirstByOrderIdOrderByCreatedAtDesc(UUID orderId);
 
     Payment save(Payment payment);
 }
