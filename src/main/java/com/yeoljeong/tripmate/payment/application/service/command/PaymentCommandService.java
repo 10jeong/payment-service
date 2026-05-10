@@ -167,8 +167,7 @@ public class PaymentCommandService {
 
         try {
             // 토스 환불 API 요청
-            // TODO: 일정 취소 시 취소 사유를 이벤트로 전달 받아 적용
-            TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), "단순 변심");
+            TossRefundCommand tossRefundCommand = tossPaymentClient.refundPayment(payment.getTossPayment().getPaymentKey(), refundPaymentCommand.reason());
 
             if (!tossRefundCommand.isCanceled()) {
                 paymentRefundRecoveryService.restoreDone(payment.getId());
