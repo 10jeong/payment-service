@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    # 환경 변수 설정
+    environment:
+      POSTGRES_USER: ${DB_USER:-tripmate}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-10jeong}
+      POSTGRES_DB: ${DB_NAME:-tripmate_postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge

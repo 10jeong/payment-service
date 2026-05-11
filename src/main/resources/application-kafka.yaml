@@ -1,0 +1,43 @@
+spring:
+  kafka:
+    # Kafka 브로커 주소
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+    consumer:
+      # 주문 서비스 Consumer Group ID
+      group-id: tripmate-order-group
+
+      # 처음 구독하거나 offset이 없을 때 가장 오래된 메시지부터 읽기
+      auto-offset-reset: latest
+
+      # 자동 커밋 비활성화
+      enable-auto-commit: false
+
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+
+      properties:
+        # JSON 역직렬화 허용 패키지
+        spring.json.trusted.packages: "com.yeoljeong.tripmate.*"
+
+        # Producer가 넣은 타입 헤더를 사용해 역직렬화
+        spring.json.use.type.headers: true
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+      properties:
+        # 메시지 헤더에 클래스 타입 정보 포함
+        spring.json.add.type.headers: true
+
+    listener:
+      # 수동 커밋 모드
+      ack-mode: manual
+
+      # 개발 환경에서 토픽이 없어도 앱이 죽지 않도록 설정
+      missing-topics-fatal: false
+
+  retry:
+    interval: 1000
+    max-attempts: 3

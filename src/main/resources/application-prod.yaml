@@ -1,0 +1,66 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: payment_db
+        format_sql: false
+        jdbc.time_zone: Asia/Seoul
+        jdbc:
+          batch_size: 30
+          order_inserts: true
+          order_updates: true
+  sql:
+    init:
+      mode: never
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAPS}
+    consumer:
+      group-id: payment-group
+      auto-offset-reset: latest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      properties:
+        acks: all
+        retries: 3
+        max.in.flight.requests.per.connection: 1
+    listener:
+      ack-mode: manual
+      missing-topics-fatal: false
+  retry:
+    interval: 1000
+    max-attempts: 3
+
+server:
+  port: ${SERVER_PORT:8087}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}
+    fetch-registry: true
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOST_NAME}
+    non-secure-port: 80
+    prefer-ip-address: false
+
+jwt:
+  secret: ${JWT_INTERNAL_SECRET}
