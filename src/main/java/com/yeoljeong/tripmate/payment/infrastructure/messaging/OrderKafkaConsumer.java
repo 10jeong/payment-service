@@ -18,27 +18,31 @@ import java.security.NoSuchAlgorithmException;
 public class OrderKafkaConsumer {
 
     private final PaymentCommandService commandService;
+    private final KafkaPayloadDeserializer payloadDeserializer;
 
     @KafkaListener(
             topics = OrderTopic.ORDER_CANCELLED_TOPIC,
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void consumeOrderCancelled(OrderCancelledEvent event, Acknowledgment acknowledgment) throws NoSuchAlgorithmException {
-        log.info("[Payment] order.cancelled 이벤트 수신: orderId={}", event.orderId());
-
-        String reason = (event.reason() == null || event.reason().isBlank()) ? "일정 탈퇴" : event.reason();
+    public void consumeOrderCancelled(String payload, Acknowledgment acknowledgment) throws NoSuchAlgorithmException {
 
         try {
+            OrderCancelledEvent event = payloadDeserializer.deserialize(payload, OrderCancelledEvent.class);
+
+            log.info("[Payment] order.cancelled 이벤트 수신: orderId={}", event.orderId());
+
+            String reason = (event.reason() == null || event.reason().isBlank()) ? "일정 탈퇴" : event.reason();
+
             commandService.refundPayment(new RefundPaymentCommand(event.orderId(), event.userId(), event.planUnitId(),
                     reason, event.productId(), event.productName(), event.scheduleId(), event.quantity()));
             acknowledgment.acknowledge();
 
             log.info("[Payment] order.cancelled 이벤트 처리 성공: orderId={}", event.orderId());
         } catch (Exception e) {
-            log.error("[Payment] order.cancelled 이벤트 처리 실패, 재시도 예정: orderId={}, error={}",
-                    event.orderId(), e.getMessage(), e);
-            throw e;
+            log.error("[Payment] order.cancelled 이벤트 처리 실패, 재시도 예정: payload={}, error={}",
+                    payload, e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 }
