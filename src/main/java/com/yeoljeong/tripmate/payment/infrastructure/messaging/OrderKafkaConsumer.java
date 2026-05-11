@@ -25,7 +25,7 @@ public class OrderKafkaConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void consumeOrderCancelled(String payload, Acknowledgment acknowledgment) throws NoSuchAlgorithmException {
+    public void consumeOrderCancelled(String payload, Acknowledgment acknowledgment) {
 
         try {
             OrderCancelledEvent event = payloadDeserializer.deserialize(payload, OrderCancelledEvent.class);
