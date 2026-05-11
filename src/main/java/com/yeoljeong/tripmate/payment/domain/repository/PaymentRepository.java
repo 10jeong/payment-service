@@ -3,7 +3,6 @@ package com.yeoljeong.tripmate.payment.domain.repository;
 import com.yeoljeong.tripmate.payment.domain.enums.PaymentStatus;
 import com.yeoljeong.tripmate.payment.domain.model.Payment;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
