@@ -10,8 +10,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import java.security.NoSuchAlgorithmException;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
