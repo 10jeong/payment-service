@@ -1,4 +1,4 @@
-package com.yeoljeong.tripmate.payment.presentation.controller;
+package com.yeoljeong.tripmate.payment.presentation.controller.external;
 
 import com.yeoljeong.tripmate.auth.annotation.LoginUser;
 import com.yeoljeong.tripmate.auth.context.UserContext;

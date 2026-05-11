@@ -31,5 +31,8 @@ public interface PaymentRepository {
 
     Optional<Payment> findById(UUID paymentId);
 
+    // orderId로 가장 최근 Payment 조회
+    Optional<Payment> findFirstByOrderIdOrderByCreatedAtDesc(UUID orderId);
+
     Payment save(Payment payment);
 }
