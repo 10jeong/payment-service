@@ -58,7 +58,7 @@ pipeline {
                         docker run -d \\
                             --name payment-service \\
                             --env-file /home/ec2-user/.env \\
-                            -p 8087:8087 \\
+                            -p 8080:8080 \\
                             ${DOCKER_IMAGE}:${DOCKER_TAG}
                     '
                 """
