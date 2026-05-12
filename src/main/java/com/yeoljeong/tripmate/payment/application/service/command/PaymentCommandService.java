@@ -110,7 +110,7 @@ public class PaymentCommandService {
 //        }
 
         payment.complete(command.paymentKey(), command.amount(), "temp_method",
-                Instant.from(LocalDateTime.now()), "temp_url");
+                Instant.now(), "temp_url");
 
         PaymentCompletedEvent event = new PaymentCompletedEvent(
                 EventUtils.getEventHash("payment", payment.getId().toString(), payment.getUpdatedAt()),
