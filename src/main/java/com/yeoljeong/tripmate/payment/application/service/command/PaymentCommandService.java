@@ -73,44 +73,41 @@ public class PaymentCommandService {
         Payment payment = paymentRepository.findByTossPayment_TossOrderId(command.tossOrderId())
                 .orElseThrow(() -> new BusinessException(PaymentErrorCode.PAYMENT_NOT_FOUND));
 
-//        validatePaymentOwner(userId, payment);
-//
-//        if (payment.isDone()) {
-//            validatePaymentKey(command.paymentKey(), payment.getTossPayment().getPaymentKey());
-//
-//            return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
-//                    payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
-//                    payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
-//                    payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
-//        }
-//
-//        if (paymentRepository.existsByOrderIdAndStatus(payment.getOrderId(), PaymentStatus.DONE)) {
-//            throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
-//        }
-//
-//        payment.getPaymentAmount().validateAmount(command.amount());
-//
-//        try {
-//            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(command.paymentKey(), command.tossOrderId(), command.amount());
-//
-//            payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
-//                    tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
-//        } catch (BusinessException e) {
-//            paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
-//            throw e;
-//        } catch (ExternalPaymentException e) {
-//
-//            // 이미 처리된 결제인 경우, 기존 DONE 결제 반환
-//            if (e.getReason() == ExternalPaymentFailureReason.ALREADY_PROCESSED) {
-//                return findCompletedPaymentResult(command);
-//            }
-//
-//            paymentFailureService.fail(payment, e.getReason().name(), e.getMessage());
-//            throw e;
-//        }
+        validatePaymentOwner(userId, payment);
 
-        payment.complete(command.paymentKey(), command.amount(), "temp_method",
-                Instant.now(), "temp_url");
+        if (payment.isDone()) {
+            validatePaymentKey(command.paymentKey(), payment.getTossPayment().getPaymentKey());
+
+            return ConfirmPaymentResult.of(payment.getId(), payment.getOrderId(), payment.getTossPayment().getTossOrderId(),
+                    payment.getTossPayment().getPaymentKey(), payment.getPaymentStatus(), payment.getPaymentMethod(),
+                    payment.getPaymentAmount().getRequestedAmount(), payment.getPaymentAmount().getApprovedAmount(),
+                    payment.getReceiptUrl(), payment.getPaymentTimestamps().getApprovedAt());
+        }
+
+        if (paymentRepository.existsByOrderIdAndStatus(payment.getOrderId(), PaymentStatus.DONE)) {
+            throw new BusinessException(PaymentErrorCode.PAYMENT_ALREADY_COMPLETED);
+        }
+
+        payment.getPaymentAmount().validateAmount(command.amount());
+
+        try {
+            TossConfirmCommand tossConfirmCommand = tossPaymentClient.confirm(command.paymentKey(), command.tossOrderId(), command.amount());
+
+            payment.complete(tossConfirmCommand.paymentKey(), tossConfirmCommand.totalAmount(), tossConfirmCommand.method(),
+                    tossConfirmCommand.approvedAt(), tossConfirmCommand.receiptUrl());
+        } catch (BusinessException e) {
+            paymentFailureService.fail(payment, e.getErrorCode().toString(), e.getMessage());
+            throw e;
+        } catch (ExternalPaymentException e) {
+
+            // 이미 처리된 결제인 경우, 기존 DONE 결제 반환
+            if (e.getReason() == ExternalPaymentFailureReason.ALREADY_PROCESSED) {
+                return findCompletedPaymentResult(command);
+            }
+
+            paymentFailureService.fail(payment, e.getReason().name(), e.getMessage());
+            throw e;
+        }
 
         PaymentCompletedEvent event = new PaymentCompletedEvent(
                 EventUtils.getEventHash("payment", payment.getId().toString(), payment.getUpdatedAt()),
