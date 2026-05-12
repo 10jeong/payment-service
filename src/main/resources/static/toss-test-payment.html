@@ -19,7 +19,7 @@
     }
 
     .container {
-      max-width: 820px;
+      max-width: 920px;
       margin: 40px auto;
       padding: 0 20px;
     }
@@ -60,13 +60,15 @@
     }
 
     input,
-    textarea {
+    textarea,
+    select {
       width: 100%;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 10px;
       font-size: 14px;
       font-family: Arial, sans-serif;
+      background: white;
     }
 
     textarea {
@@ -88,8 +90,17 @@
       color: white;
     }
 
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .secondary {
       background: #4f6ef7;
+    }
+
+    .danger {
+      background: #e74c3c;
     }
 
     .result {
@@ -114,6 +125,10 @@
     .notice {
       font-size: 14px;
       color: #555;
+      background: #fff8df;
+      border: 1px solid #ffe8a3;
+      padding: 12px;
+      border-radius: 10px;
     }
 
     .grid {
@@ -122,8 +137,15 @@
       gap: 12px;
     }
 
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
     @media (max-width: 720px) {
-      .grid {
+      .grid,
+      .grid-3 {
         grid-template-columns: 1fr;
       }
     }
@@ -136,125 +158,419 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1>Tripmate 토스 결제 인증 시연</h1>
-    </div>
-
-    <div class="card">
-      <h2>토스 결제창 설정값 입력</h2>
-
-      <label for="clientKey">토스 테스트 Client Key</label>
-      <input id="clientKey"/>
-
-      <h3>Postman 결제 생성 응답 JSON 붙여넣기</h3>
-      <textarea id="paymentResponseJson"></textarea>
-      <button class="secondary" onclick="applyPaymentResponseJson()">응답값 적용하기</button>
-
-      <div class="grid">
-        <div>
-          <label for="tossOrderId">tossOrderId</label>
-          <input id="tossOrderId"/>
-        </div>
-        <div>
-          <label for="amount">amount</label>
-          <input id="amount"/>
-        </div>
-      </div>
-
-      <label for="orderName">orderName</label>
-      <input id="orderName"/>
-
-      <label for="successUrl">successUrl</label>
-      <input id="successUrl"/>
-
-      <label for="failUrl">failUrl</label>
-      <input id="failUrl"/>
-    </div>
-
-    <div class="card">
-      <h2>토스 테스트 결제창 열기</h2>
-      <button onclick="requestTossPayment()">토스 테스트 결제하기</button>
-      <h3>현재 결제창 요청값</h3>
-      <div id="requestPreview" class="result"/>
-    </div>
+<div class="container">
+  <div class="card">
+    <h1>Tripmate 토스 결제 인증 시연</h1>
+    <p class="notice">
+      테스트용 페이지입니다. API 호출에는 아래 헤더값이 자동으로 붙습니다.
+      단, 브라우저 주소창으로 HTML 자체를 열 때는 헤더를 붙일 수 없으므로, 이 페이지는 가능하면 Gateway 정적 경로에서 여세요.
+    </p>
   </div>
 
-  <script>
-    function getValue(id) {
-      return document.getElementById(id).value.trim();
+  <div class="card" id="redirectCard" style="display: none;">
+    <span class="step">Redirect 결과</span>
+    <h2>토스 Redirect 파라미터</h2>
+    <div id="redirectPreview" class="result"></div>
+  </div>
+
+  <div class="card">
+    <span class="step">공통 설정</span>
+    <h2>Gateway API / 인증 헤더 설정</h2>
+
+    <label for="apiBaseUrl">API Base URL</label>
+    <input id="apiBaseUrl" placeholder="예: http://43.201.242.253:8080" />
+
+    <div class="grid">
+      <div>
+        <label for="authHeaderName">인증 헤더 이름</label>
+        <input id="authHeaderName" placeholder="예: Authorization 또는 X-User-Id" />
+      </div>
+      <div>
+        <label for="authHeaderValue">인증 헤더 값</label>
+        <input id="authHeaderValue" placeholder="예: Bearer eyJ... 또는 사용자 UUID" />
+      </div>
+    </div>
+
+    <button class="secondary" onclick="saveCommonSettings()">공통 설정 저장</button>
+  </div>
+
+  <div class="card">
+    <span class="step">1단계</span>
+    <h2>결제 생성 API 호출</h2>
+
+    <label for="createPaymentPath">결제 생성 API Path</label>
+    <input id="createPaymentPath" placeholder="예: /payments" />
+
+    <label for="createPaymentBody">결제 생성 Request Body JSON</label>
+    <textarea id="createPaymentBody" spellcheck="false"></textarea>
+
+    <button onclick="createPayment()">결제 생성 API 호출하기</button>
+
+    <h3>결제 생성 응답</h3>
+    <div id="createPaymentResult" class="result"></div>
+  </div>
+
+  <div class="card">
+    <span class="step">2단계</span>
+    <h2>토스 결제창 설정값</h2>
+
+    <label for="clientKey">토스 테스트 Client Key</label>
+    <input id="clientKey" placeholder="test_ck_..." />
+
+    <h3>Postman 또는 결제 생성 응답 JSON 붙여넣기</h3>
+    <textarea id="paymentResponseJson" spellcheck="false"></textarea>
+    <button class="secondary" onclick="applyPaymentResponseJson()">응답값 적용하기</button>
+
+    <div class="grid">
+      <div>
+        <label for="tossOrderId">tossOrderId</label>
+        <input id="tossOrderId" />
+      </div>
+      <div>
+        <label for="amount">amount</label>
+        <input id="amount" />
+      </div>
+    </div>
+
+    <label for="orderName">orderName</label>
+    <input id="orderName" />
+
+    <label for="successUrl">successUrl</label>
+    <input id="successUrl" />
+
+    <label for="failUrl">failUrl</label>
+    <input id="failUrl" />
+  </div>
+
+  <div class="card">
+    <span class="step">3단계</span>
+    <h2>토스 테스트 결제창 열기</h2>
+    <button onclick="requestTossPayment()">토스 테스트 결제하기</button>
+    <h3>현재 결제창 요청값</h3>
+    <div id="requestPreview" class="result"></div>
+  </div>
+
+  <div class="card">
+    <span class="step">4단계</span>
+    <h2>결제 승인 API 호출</h2>
+    <p class="notice">
+      토스 결제 성공 후 <code>paymentKey</code>, <code>orderId</code>, <code>amount</code>가 URL query로 들어오면 자동으로 아래 입력값에 반영됩니다.
+    </p>
+
+    <label for="confirmPaymentPath">결제 승인 API Path</label>
+    <input id="confirmPaymentPath" placeholder="예: /payments/confirm" />
+
+    <div class="grid-3">
+      <div>
+        <label for="confirmPaymentKey">paymentKey</label>
+        <input id="confirmPaymentKey" />
+      </div>
+      <div>
+        <label for="confirmTossOrderId">tossOrderId</label>
+        <input id="confirmTossOrderId" />
+      </div>
+      <div>
+        <label for="confirmAmount">amount</label>
+        <input id="confirmAmount" />
+      </div>
+    </div>
+
+    <button onclick="confirmPayment()">결제 승인 API 호출하기</button>
+
+    <h3>결제 승인 응답</h3>
+    <div id="confirmPaymentResult" class="result"></div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = "tripmate-toss-test-settings";
+
+  function getValue(id) {
+    return document.getElementById(id).value.trim();
+  }
+
+  function setValue(id, value) {
+    if (value !== undefined && value !== null) {
+      document.getElementById(id).value = value;
+    }
+  }
+
+  function renderResult(id, data) {
+    document.getElementById(id).textContent = typeof data === "string"
+            ? data
+            : JSON.stringify(data, null, 2);
+  }
+
+  function resolveUrl(pathOrUrl) {
+    if (!pathOrUrl) {
+      throw new Error("API Path가 비어 있습니다.");
     }
 
-    function setValue(id, value) {
-      if (value !== undefined && value !== null) {
-        document.getElementById(id).value = value;
-      }
+    if (pathOrUrl.startsWith("http://") || pathOrUrl.startsWith("https://")) {
+      return pathOrUrl;
     }
 
-    function renderResult(id, data) {
-      document.getElementById(id).textContent = typeof data === "string"
-        ? data
-        : JSON.stringify(data, null, 2);
+    const baseUrl = getValue("apiBaseUrl") || window.location.origin;
+    const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+    const normalizedPath = pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`;
+    return `${normalizedBaseUrl}${normalizedPath}`;
+  }
+
+  function buildHeaders() {
+    const headers = {
+      "Content-Type": "application/json"
+    };
+
+    const headerName = getValue("authHeaderName");
+    const headerValue = getValue("authHeaderValue");
+
+    if (headerName && headerValue) {
+      headers[headerName] = headerValue;
     }
 
-    function applyPaymentResponseJson() {
-      const rawJson = getValue("paymentResponseJson");
+    return headers;
+  }
 
-      if (!rawJson) {
-        alert("Postman 결제 생성 응답 JSON을 붙여넣어 주세요.");
-        return;
+  function saveCommonSettings() {
+    const settings = {
+      apiBaseUrl: getValue("apiBaseUrl"),
+      authHeaderName: getValue("authHeaderName"),
+      authHeaderValue: getValue("authHeaderValue"),
+      createPaymentPath: getValue("createPaymentPath"),
+      confirmPaymentPath: getValue("confirmPaymentPath"),
+      clientKey: getValue("clientKey"),
+      successUrl: getValue("successUrl"),
+      failUrl: getValue("failUrl")
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    renderResult("requestPreview", "공통 설정이 브라우저 localStorage에 저장되었습니다.");
+  }
+
+  function loadCommonSettings() {
+    const rawSettings = localStorage.getItem(STORAGE_KEY);
+    const defaults = {
+      apiBaseUrl: window.location.origin,
+      authHeaderName: "",
+      authHeaderValue: "",
+      createPaymentPath: "/payments",
+      confirmPaymentPath: "/payments/confirm",
+      clientKey: "",
+      successUrl: `${window.location.origin}${window.location.pathname}`,
+      failUrl: `${window.location.origin}${window.location.pathname}`
+    };
+
+    const settings = rawSettings ? { ...defaults, ...JSON.parse(rawSettings) } : defaults;
+
+    Object.entries(settings).forEach(([key, value]) => {
+      const element = document.getElementById(key);
+      if (element) {
+        element.value = value;
       }
+    });
+  }
 
-      try {
-        const responseBody = JSON.parse(rawJson);
-        const payment = responseBody.data ?? responseBody;
+  function defaultCreatePaymentBody() {
+    return {
+      orderId: "주문 UUID를 입력하세요",
+      amount: 10000,
+      orderName: "Tripmate 테스트 결제",
+      successUrl: `${window.location.origin}${window.location.pathname}`,
+      failUrl: `${window.location.origin}${window.location.pathname}`
+    };
+  }
 
-        setValue("tossOrderId", payment.tossOrderId);
-        setValue("amount", payment.amount ?? payment.requestedAmount);
-        setValue("orderName", payment.orderName ?? "Tripmate 테스트 결제");
-        setValue("successUrl", payment.successUrl);
-        setValue("failUrl", payment.failUrl);
+  async function postJson(pathOrUrl, body) {
+    const response = await fetch(resolveUrl(pathOrUrl), {
+      method: "POST",
+      headers: buildHeaders(),
+      body: JSON.stringify(body)
+    });
 
-        renderResult("requestPreview", {
-          message: "응답값이 적용되었습니다. 결제창을 열어주세요."
-        });
-      } catch (error) {
-        alert("JSON 파싱에 실패했습니다. Postman 응답 형식을 확인해 주세요.");
-        renderResult("requestPreview", error.message);
-      }
+    const text = await response.text();
+    let parsedBody;
+
+    try {
+      parsedBody = text ? JSON.parse(text) : null;
+    } catch (error) {
+      parsedBody = text;
     }
 
-    function requestTossPayment() {
-      const clientKey = getValue("clientKey");
-      const tossOrderId = getValue("tossOrderId");
-      const amount = Number(getValue("amount"));
-      const orderName = getValue("orderName") || "Tripmate 테스트 결제";
-      const successUrl = getValue("successUrl");
-      const failUrl = getValue("failUrl");
-
-      if (!clientKey) {
-        alert("토스 테스트 Client Key를 입력해 주세요.");
-        return;
-      }
-
-      if (!tossOrderId || !amount || !successUrl || !failUrl) {
-        alert("tossOrderId, amount, successUrl, failUrl은 필수입니다.");
-        return;
-      }
-
-      const requestPayload = {
-        amount,
-        orderId: tossOrderId,
-        orderName,
-        successUrl,
-        failUrl
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        statusText: response.statusText,
+        body: parsedBody
       };
-
-      renderResult("requestPreview", requestPayload);
-
-      const tossPayments = TossPayments(clientKey);
-      tossPayments.requestPayment("카드", requestPayload);
     }
-  </script>
+
+    return parsedBody;
+  }
+
+  function extractPayment(responseBody) {
+    const body = responseBody?.data ?? responseBody;
+    return body?.payment ?? body?.result ?? body;
+  }
+
+  function applyPayment(payment) {
+    if (!payment) {
+      return;
+    }
+
+    setValue("tossOrderId", payment.tossOrderId ?? payment.orderId);
+    setValue("amount", payment.amount ?? payment.requestedAmount ?? payment.totalAmount);
+    setValue("orderName", payment.orderName ?? "Tripmate 테스트 결제");
+    setValue("successUrl", payment.successUrl ?? getValue("successUrl"));
+    setValue("failUrl", payment.failUrl ?? getValue("failUrl"));
+  }
+
+  async function createPayment() {
+    saveCommonSettings();
+
+    try {
+      const rawBody = getValue("createPaymentBody");
+      const requestBody = JSON.parse(rawBody);
+      const responseBody = await postJson(getValue("createPaymentPath"), requestBody);
+      const payment = extractPayment(responseBody);
+
+      applyPayment(payment);
+      setValue("paymentResponseJson", JSON.stringify(responseBody, null, 2));
+
+      renderResult("createPaymentResult", responseBody);
+      renderResult("requestPreview", {
+        message: "결제 생성 API 응답값이 토스 결제창 설정에 적용되었습니다.",
+        payment
+      });
+    } catch (error) {
+      renderResult("createPaymentResult", error);
+      alert("결제 생성 API 호출에 실패했습니다. 응답 영역을 확인해 주세요.");
+    }
+  }
+
+  function applyPaymentResponseJson() {
+    const rawJson = getValue("paymentResponseJson");
+
+    if (!rawJson) {
+      alert("Postman 또는 결제 생성 응답 JSON을 붙여넣어 주세요.");
+      return;
+    }
+
+    try {
+      const responseBody = JSON.parse(rawJson);
+      const payment = extractPayment(responseBody);
+
+      applyPayment(payment);
+
+      renderResult("requestPreview", {
+        message: "응답값이 적용되었습니다. 결제창을 열어주세요.",
+        payment
+      });
+    } catch (error) {
+      alert("JSON 파싱에 실패했습니다. 응답 형식을 확인해 주세요.");
+      renderResult("requestPreview", error.message);
+    }
+  }
+
+  function requestTossPayment() {
+    saveCommonSettings();
+
+    const clientKey = getValue("clientKey");
+    const tossOrderId = getValue("tossOrderId");
+    const amount = Number(getValue("amount"));
+    const orderName = getValue("orderName") || "Tripmate 테스트 결제";
+    const successUrl = getValue("successUrl");
+    const failUrl = getValue("failUrl");
+
+    if (!clientKey) {
+      alert("토스 테스트 Client Key를 입력해 주세요.");
+      return;
+    }
+
+    if (!tossOrderId || !amount || !successUrl || !failUrl) {
+      alert("tossOrderId, amount, successUrl, failUrl은 필수입니다.");
+      return;
+    }
+
+    const requestPayload = {
+      amount,
+      orderId: tossOrderId,
+      orderName,
+      successUrl,
+      failUrl
+    };
+
+    renderResult("requestPreview", requestPayload);
+
+    const tossPayments = TossPayments(clientKey);
+    tossPayments.requestPayment("카드", requestPayload);
+  }
+
+  function applyRedirectParams() {
+    const params = new URLSearchParams(window.location.search);
+    const paymentKey = params.get("paymentKey");
+    const orderId = params.get("orderId");
+    const amount = params.get("amount");
+    const code = params.get("code");
+    const message = params.get("message");
+
+    if (!paymentKey && !code) {
+      return;
+    }
+
+    document.getElementById("redirectCard").style.display = "block";
+    renderResult("redirectPreview", Object.fromEntries(params.entries()));
+
+    if (paymentKey) {
+      setValue("confirmPaymentKey", paymentKey);
+      setValue("confirmTossOrderId", orderId);
+      setValue("confirmAmount", amount);
+    }
+
+    if (code || message) {
+      renderResult("confirmPaymentResult", {
+        message: "토스 결제 실패 redirect입니다.",
+        code,
+        reason: message
+      });
+    }
+  }
+
+  async function confirmPayment() {
+    saveCommonSettings();
+
+    const paymentKey = getValue("confirmPaymentKey");
+    const tossOrderId = getValue("confirmTossOrderId");
+    const amount = Number(getValue("confirmAmount"));
+
+    if (!paymentKey || !tossOrderId || !amount) {
+      alert("paymentKey, tossOrderId, amount는 필수입니다.");
+      return;
+    }
+
+    const requestBody = {
+      paymentKey,
+      tossOrderId,
+      amount
+    };
+
+    try {
+      const responseBody = await postJson(getValue("confirmPaymentPath"), requestBody);
+      renderResult("confirmPaymentResult", responseBody);
+    } catch (error) {
+      renderResult("confirmPaymentResult", error);
+      alert("결제 승인 API 호출에 실패했습니다. 응답 영역을 확인해 주세요.");
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    loadCommonSettings();
+
+    if (!getValue("createPaymentBody")) {
+      setValue("createPaymentBody", JSON.stringify(defaultCreatePaymentBody(), null, 2));
+    }
+
+    applyRedirectParams();
+  });
+</script>
 </body>
 </html>
