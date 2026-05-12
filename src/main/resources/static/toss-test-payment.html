@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tripmate 토스 결제 인증 시연</title>
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+  <link rel="icon" href="data:,">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      color: #222;
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    h3 {
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      background: #222;
+      color: white;
+    }
+
+    .secondary {
+      background: #4f6ef7;
+    }
+
+    .result {
+      padding: 14px;
+      border-radius: 10px;
+      background: #f2f4f8;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 13px;
+      min-height: 48px;
+    }
+
+    .step {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e9ecf3;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .notice {
+      font-size: 14px;
+      color: #555;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    code {
+      background: #f2f4f8;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Tripmate 토스 결제 인증 시연</h1>
+    </div>
+
+    <div class="card">
+      <h2>토스 결제창 설정값 입력</h2>
+
+      <label for="clientKey">토스 테스트 Client Key</label>
+      <input id="clientKey"/>
+
+      <h3>Postman 결제 생성 응답 JSON 붙여넣기</h3>
+      <textarea id="paymentResponseJson"></textarea>
+      <button class="secondary" onclick="applyPaymentResponseJson()">응답값 적용하기</button>
+
+      <div class="grid">
+        <div>
+          <label for="tossOrderId">tossOrderId</label>
+          <input id="tossOrderId"/>
+        </div>
+        <div>
+          <label for="amount">amount</label>
+          <input id="amount"/>
+        </div>
+      </div>
+
+      <label for="orderName">orderName</label>
+      <input id="orderName"/>
+
+      <label for="successUrl">successUrl</label>
+      <input id="successUrl"/>
+
+      <label for="failUrl">failUrl</label>
+      <input id="failUrl"/>
+    </div>
+
+    <div class="card">
+      <h2>토스 테스트 결제창 열기</h2>
+      <button onclick="requestTossPayment()">토스 테스트 결제하기</button>
+      <h3>현재 결제창 요청값</h3>
+      <div id="requestPreview" class="result"/>
+    </div>
+  </div>
+
+  <script>
+    function getValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function setValue(id, value) {
+      if (value !== undefined && value !== null) {
+        document.getElementById(id).value = value;
+      }
+    }
+
+    function renderResult(id, data) {
+      document.getElementById(id).textContent = typeof data === "string"
+        ? data
+        : JSON.stringify(data, null, 2);
+    }
+
+    function applyPaymentResponseJson() {
+      const rawJson = getValue("paymentResponseJson");
+
+      if (!rawJson) {
+        alert("Postman 결제 생성 응답 JSON을 붙여넣어 주세요.");
+        return;
+      }
+
+      try {
+        const responseBody = JSON.parse(rawJson);
+        const payment = responseBody.data ?? responseBody;
+
+        setValue("tossOrderId", payment.tossOrderId);
+        setValue("amount", payment.amount ?? payment.requestedAmount);
+        setValue("orderName", payment.orderName ?? "Tripmate 테스트 결제");
+        setValue("successUrl", payment.successUrl);
+        setValue("failUrl", payment.failUrl);
+
+        renderResult("requestPreview", {
+          message: "응답값이 적용되었습니다. 결제창을 열어주세요."
+        });
+      } catch (error) {
+        alert("JSON 파싱에 실패했습니다. Postman 응답 형식을 확인해 주세요.");
+        renderResult("requestPreview", error.message);
+      }
+    }
+
+    function requestTossPayment() {
+      const clientKey = getValue("clientKey");
+      const tossOrderId = getValue("tossOrderId");
+      const amount = Number(getValue("amount"));
+      const orderName = getValue("orderName") || "Tripmate 테스트 결제";
+      const successUrl = getValue("successUrl");
+      const failUrl = getValue("failUrl");
+
+      if (!clientKey) {
+        alert("토스 테스트 Client Key를 입력해 주세요.");
+        return;
+      }
+
+      if (!tossOrderId || !amount || !successUrl || !failUrl) {
+        alert("tossOrderId, amount, successUrl, failUrl은 필수입니다.");
+        return;
+      }
+
+      const requestPayload = {
+        amount,
+        orderId: tossOrderId,
+        orderName,
+        successUrl,
+        failUrl
+      };
+
+      renderResult("requestPreview", requestPayload);
+
+      const tossPayments = TossPayments(clientKey);
+      tossPayments.requestPayment("카드", requestPayload);
+    }
+  </script>
+</body>
+</html>
