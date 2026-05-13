@@ -13,6 +13,11 @@ import java.math.BigDecimal;
 @RequestMapping("/payments")
 public class PaymentDemoController {
 
+    @GetMapping("/test-page")
+    public String redirectToPaymentTestPage() {
+        return "redirect:/toss-test-payment.html";
+    }
+
     @GetMapping("/success")
     public String paymentSuccess(
             @RequestParam String paymentKey,
