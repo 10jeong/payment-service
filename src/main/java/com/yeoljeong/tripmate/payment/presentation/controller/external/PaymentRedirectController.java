@@ -10,7 +10,7 @@ public class PaymentRedirectController {
 
     @GetMapping("/test-page")
     public String redirectToPaymentTestPage() {
-        return "redirect:/toss-test-payment.html";
+        return "forward:/toss-test-payment.html";
     }
 
 }
