@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: payment-service
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
@@ -49,9 +51,16 @@ spring:
     listener:
       ack-mode: manual
       missing-topics-fatal: false
+      observation-enabled: true
+    template:
+      observation-enabled: true
   retry:
     interval: 1000
     max-attempts: 3
+  cloud:
+    openfeign:
+      micrometer:
+        enabled: true
 
 server:
   port: ${SERVER_PORT:8080}
@@ -79,6 +88,12 @@ management:
       show-details: always
     prometheus:
       access: unrestricted
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_SERVER_URL}
 
 jwt:
   secret: ${JWT_INTERNAL_SECRET}
