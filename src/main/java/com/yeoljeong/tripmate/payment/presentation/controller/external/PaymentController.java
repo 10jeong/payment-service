@@ -30,7 +30,7 @@ public class PaymentController {
     private final PaymentQueryService queryService;
 
     @PostMapping
-    public ApiResponse<CreatePaymentResponse> createPayment(@LoginUser UserContext userContext, @RequestBody CreatePaymentRequest request) {
+    public ApiResponse<CreatePaymentResponse> createPayment(@LoginUser UserContext userContext, @RequestBody CreatePaymentRequest request) throws NoSuchAlgorithmException {
         CreatePaymentResult result = commandService.createPayment(userContext.userId(), request.orderId());
 
         return ApiResponse.success(CommonSuccessCode.OK, CreatePaymentResponse.from(result));
