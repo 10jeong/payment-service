@@ -64,20 +64,20 @@ public class PaymentCommandService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
-        // 결제 승인 스킵용 임시 이벤트 발행
-        PaymentCompletedEvent event = new PaymentCompletedEvent(
-                EventUtils.getEventHash("payment", savedPayment.getId().toString(), savedPayment.getUpdatedAt()),
-                savedPayment.getUserId(),
-                savedPayment.getOrderId(),
-                savedPayment.getId(),
-                savedPayment.getProductName(),
-                savedPayment.getPaymentAmount().getApprovedAmount(),
-                savedPayment.getPaymentTimestamps().getApprovedAt(),
-                savedPayment.getPaymentMethod()
-        );
-
-        // 결제 성공 이벤트 outbox에 저장
-        paymentOutboxRecorder.record(PaymentTopic.PAYMENT_COMPLETED_TOPIC, event);
+//        // 결제 승인 스킵용 임시 이벤트 발행
+//        PaymentCompletedEvent event = new PaymentCompletedEvent(
+//                EventUtils.getEventHash("payment", savedPayment.getId().toString(), savedPayment.getUpdatedAt()),
+//                savedPayment.getUserId(),
+//                savedPayment.getOrderId(),
+//                savedPayment.getId(),
+//                savedPayment.getProductName(),
+//                savedPayment.getPaymentAmount().getApprovedAmount(),
+//                savedPayment.getPaymentTimestamps().getApprovedAt(),
+//                savedPayment.getPaymentMethod()
+//        );
+//
+//        // 결제 성공 이벤트 outbox에 저장
+//        paymentOutboxRecorder.record(PaymentTopic.PAYMENT_COMPLETED_TOPIC, event);
 
         return CreatePaymentResult.of(savedPayment, payableCommand.orderName(),
                 tossPaymentProperties.successUrl(), tossPaymentProperties.failUrl());
